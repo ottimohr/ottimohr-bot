@@ -10,8 +10,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+TELEGRAM_TOKEN = os.environ.get("AIzaSyCl8yAJqtLjqNBrXFvIBv2sCkB3tUTngmM")
+GEMINI_API_KEY = os.environ.get("8658318528:AAHfAtqs4eDOu6QMcbQOgdOpviC0WIh5Sp4")
 
 SYSTEM_PROMPT = """Sen Ottimo Cafe (Toshkentdagi zamonaviy italyan-style kafe) uchun HR agentisan.
 Faqat O'zbek tilida javob ber.
@@ -19,7 +19,7 @@ Faqat O'zbek tilida javob ber.
 Ottimo Cafe haqida:
 - 25 xodim ishlaydi
 - Lavozimlari: barista, ofitsiant, oshpaz, kassir, menejer, tozalovchi
-- Ish vaqti: 08:00-22:00 (2 smena: 08:00-15:00 va 15:00-22:00)
+- Ish vaqti: 08:00-00:00 (2 smena: 08:00-15:00 va 15:00-22:00)
 - Probatsiya muddati: 1 oy
 - Ish haqi: Barista 3-4 mln, Ofitsiant 2.5-3.5 mln, Menejer 6-8 mln UZS
 - O'zbekiston Mehnat kodeksiga mos ishlaydi
