@@ -1,7 +1,7 @@
 import os
 import logging
 import requests
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 logging.basicConfig(
@@ -10,8 +10,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TELEGRAM_TOKEN = os.environ.get("AIzaSyCl8yAJqtLjqNBrXFvIBv2sCkB3tUTngmM")
-GEMINI_API_KEY = os.environ.get("8658318528:AAHfAtqs4eDOu6QMcbQOgdOpviC0WIh5Sp4")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 SYSTEM_PROMPT = """Sen Ottimo Cafe (Toshkentdagi zamonaviy italyan-style kafe) uchun HR agentisan.
 Faqat O'zbek tilida javob ber.
@@ -19,7 +19,7 @@ Faqat O'zbek tilida javob ber.
 Ottimo Cafe haqida:
 - 25 xodim ishlaydi
 - Lavozimlari: barista, ofitsiant, oshpaz, kassir, menejer, tozalovchi
-- Ish vaqti: 08:00-00:00 (2 smena: 08:00-15:00 va 15:00-22:00)
+- Ish vaqti: 08:00-22:00 (2 smena: 08:00-15:00 va 15:00-22:00)
 - Probatsiya muddati: 1 oy
 - Ish haqi: Barista 3-4 mln, Ofitsiant 2.5-3.5 mln, Menejer 6-8 mln UZS
 - O'zbekiston Mehnat kodeksiga mos ishlaydi
@@ -37,6 +37,14 @@ Har doim do'stona, aniq va amaliy javob ber."""
 
 user_sessions = {}
 
+# Menyu tugmalari
+MENU = ReplyKeyboardMarkup([
+    ["📋 Xodim qabul qilish", "📅 Smena jadvali"],
+    ["💰 Ish haqi va bonuslar", "📝 Mehnat shartnomasi"],
+    ["⚖️ Mehnat qonunlari", "🤝 Xodimlar bilan muammolar"],
+    ["🆘 Yordam", "🗑️ Suhbatni tozalash"]
+], resize_keyboard=True)
+
 def ask_gemini(user_id, user_text):
     history = user_sessions.get(user_id, [])
     history_text = ""
@@ -46,7 +54,7 @@ def ask_gemini(user_id, user_text):
             for h in history[-5:]
         ])
     full_prompt = SYSTEM_PROMPT + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     payload = {
         "contents": [{"parts": [{"text": full_prompt}]}],
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1000}
@@ -58,36 +66,44 @@ def ask_gemini(user_id, user_text):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name or "Salom"
-    text = f"👋 Salom, {user_name}!\n\nMen *Ottimo Cafe HR Agentiman* 🍽️\n\nQuyidagi masalalarda yordam bera olaman:\n\n📋 Xodim qabul qilish\n📅 Smena jadvali\n💰 Ish haqi va bonuslar\n📝 Mehnat shartnomasi\n⚖️ Mehnat qonunlari\n🤝 Xodimlar bilan muammolar\n\nSavolingizni yozing!\n\n/help — yordam\n/clear — suhbatni tozalash"
-    await update.message.reply_text(text, parse_mode='Markdown')
+    text = f"👋 Salom, {user_name}!\n\nMen *Ottimo Cafe HR Agentiman* 🍽️\n\nQuyidagi mavzularda yordam bera olaman. Pastdagi menyudan tanlang yoki o'zingiz savol yozing!"
+    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=MENU)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "🆘 *Yordam*\n\nMenga istalgan HR savolini yozishingiz mumkin:\n\n• Barista uchun talablar qanday?\n• Yangi xodimni qanday qabul qilamiz?\n• Smena jadvalini qanday tuzish kerak?\n• Probatsiya muddati qancha?\n• Xodim shikoyat qilsa nima qilamiz?\n\n/start — Boshiga qaytish\n/clear — Suhbatni tozalash"
-    await update.message.reply_text(text, parse_mode='Markdown')
-
-async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_sessions[update.effective_user.id] = []
-    await update.message.reply_text("✅ Suhbat tozalandi!")
+    text = "🆘 *Yordam*\n\nMenyudan mavzu tanlang yoki o'zingiz savol yozing:\n\n📋 Xodim qabul qilish\n📅 Smena jadvali\n💰 Ish haqi va bonuslar\n📝 Mehnat shartnomasi\n⚖️ Mehnat qonunlari\n🤝 Xodimlar bilan muammolar"
+    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=MENU)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
+
+    # Maxsus tugmalar
+    if user_text == "🗑️ Suhbatni tozalash":
+        user_sessions[user_id] = []
+        await update.message.reply_text("✅ Suhbat tozalandi!", reply_markup=MENU)
+        return
+    
+    if user_text == "🆘 Yordam":
+        await help_command(update, context)
+        return
+
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    
     if user_id not in user_sessions:
         user_sessions[user_id] = []
+
     try:
         reply = ask_gemini(user_id, user_text)
         user_sessions[user_id].append({"user": user_text, "agent": reply})
-        await update.message.reply_text(reply)
+        await update.message.reply_text(reply, reply_markup=MENU)
     except Exception as e:
         logger.error(f"Xato: {e}")
-        await update.message.reply_text("⚠️ Xatolik yuz berdi. Qaytadan urinib ko'ring.")
+        await update.message.reply_text("⚠️ Xatolik yuz berdi. Qaytadan urinib ko'ring.", reply_markup=MENU)
 
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("clear", clear_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     logger.info("Bot ishga tushdi!")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
