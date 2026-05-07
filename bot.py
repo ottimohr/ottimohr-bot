@@ -1,7 +1,7 @@
 import os
 import logging
 import requests
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 logging.basicConfig(
@@ -33,17 +33,26 @@ HR vazifalaring:
 6. Mojarolar - hal qilish yo'llari
 7. Mehnat qonunlari - O'zbekiston qonunchiligi bo'yicha
 
-Har doim do'stona, aniq va amaliy javob ber."""
+Har doim do'stona, aniq va amaliy javob ber. Kerak bo'lsa ro'yxat yoki jadval ko'rinishida yoz."""
 
-user_sessions = {}
+# Menyu tugmalari va ularning savollari
+MENU_QUESTIONS = {
+    "📋 Xodim qabul qilish": "Ottimo Cafe da yangi xodim qabul qilish jarayonini batafsil tushuntir. Qanday qadamlar bor?",
+    "📅 Smena jadvali": "Ottimo Cafe uchun smena jadvalini qanday tuzish kerak? Namuna jadval ham ko'rsat.",
+    "💰 Ish haqi va bonuslar": "Ottimo Cafe xodimlarining ish haqi va bonus tizimi haqida batafsil ma'lumot ber.",
+    "📝 Mehnat shartnomasi": "Ottimo Cafe da mehnat shartnomasi qanday tuziladi? Asosiy shartlar nima?",
+    "⚖️ Mehnat qonunlari": "O'zbekiston mehnat qonunlari bo'yicha Ottimo Cafe xodimlarining asosiy huquq va majburiyatlari nima?",
+    "🤝 Xodimlar bilan muammolar": "Xodimlar o'rtasidagi mojarolar va muammolarni qanday hal qilish kerak? Misollar bilan tushuntir.",
+}
 
-# Menyu tugmalari
 MENU = ReplyKeyboardMarkup([
     ["📋 Xodim qabul qilish", "📅 Smena jadvali"],
     ["💰 Ish haqi va bonuslar", "📝 Mehnat shartnomasi"],
     ["⚖️ Mehnat qonunlari", "🤝 Xodimlar bilan muammolar"],
     ["🆘 Yordam", "🗑️ Suhbatni tozalash"]
 ], resize_keyboard=True)
+
+user_sessions = {}
 
 def ask_gemini(user_id, user_text):
     history = user_sessions.get(user_id, [])
@@ -66,7 +75,7 @@ def ask_gemini(user_id, user_text):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name or "Salom"
-    text = f"👋 Salom, {user_name}!\n\nMen *Ottimo Cafe HR Agentiman* 🍽️\n\nQuyidagi mavzularda yordam bera olaman. Pastdagi menyudan tanlang yoki o'zingiz savol yozing!"
+    text = f"👋 Salom, {user_name}!\n\nMen *Ottimo Cafe HR Agentiman* 🍽️\n\nQuyidagi menyudan mavzu tanlang yoki o'zingiz savol yozing!"
     await update.message.reply_text(text, parse_mode='Markdown', reply_markup=MENU)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,24 +86,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
 
-    # Maxsus tugmalar
+    # Suhbatni tozalash
     if user_text == "🗑️ Suhbatni tozalash":
         user_sessions[user_id] = []
-        await update.message.reply_text("✅ Suhbat tozalandi!", reply_markup=MENU)
+        await update.message.reply_text("✅ Suhbat tozalandi! Yangi savol bering.", reply_markup=MENU)
         return
-    
+
+    # Yordam
     if user_text == "🆘 Yordam":
         await help_command(update, context)
         return
 
+    # Menyu tugmasi bosilganda savol sifatida yuborish
+    if user_text in MENU_QUESTIONS:
+        actual_question = MENU_QUESTIONS[user_text]
+    else:
+        actual_question = user_text
+
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-    
+
     if user_id not in user_sessions:
         user_sessions[user_id] = []
 
     try:
-        reply = ask_gemini(user_id, user_text)
-        user_sessions[user_id].append({"user": user_text, "agent": reply})
+        reply = ask_gemini(user_id, actual_question)
+        user_sessions[user_id].append({"user": actual_question, "agent": reply})
         await update.message.reply_text(reply, reply_markup=MENU)
     except Exception as e:
         logger.error(f"Xato: {e}")
