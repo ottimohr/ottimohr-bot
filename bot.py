@@ -1,140 +1,94 @@
 import os
 import logging
 import requests
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+ADMIN_USERNAME = "mr_jalilov7"
 
-SYSTEM_PROMPT = """Sen Ottimo Cafe uchun HR agentisan. Faqat O'zbek tilida javob ber.
+# ===================== ANKETA SAVOLLARI =====================
+ANKETA_STEPS = [
+    ("ism", "👤 *1/15* — Ismingizni kiriting:\n_(Masalan: Ibrohim)_"),
+    ("familiya", "👤 *2/15* — Familiyangizni kiriting:\n_(Masalan: Karimov)_"),
+    ("sharif", "👤 *3/15* — Sharifingizni kiriting:\n_(Masalan: Aliyevich)_"),
+    ("tug_sana", "📅 *4/15* — Tug'ilgan sanangiz:\n_(Masalan: 15.03.2000)_"),
+    ("millat", "🌍 *5/15* — Millatingiz:\n_(Masalan: O'zbek)_"),
+    ("yashash", "🏠 *6/15* — Doimiy yashash manzilingiz:\n_(Tuman, ko'cha, uy)_"),
+    ("telefon", "📱 *7/15* — Telefon raqamingiz:\n_(Masalan: +998 90 123 45 67)_"),
+    ("talim", "🎓 *8/15* — Ta'lim darajangiz:\n_(Maktab / Kollej / Universitet)_"),
+    ("tajriba", "💼 *9/15* — Oldingi ish tajribangiz:\n_(Korxona nomi, lavozim, yillar. Yo'q bo'lsa — Yo'q deb yozing)_"),
+    ("rus_tili", "🗣️ *10/15* — Rus tilini bilish darajangiz:\n_(A'lo / Yaxshi / Past / Bilmayman)_"),
+    ("ingliz_tili", "🗣️ *11/15* — Ingliz tilini bilish darajangiz:\n_(A'lo / Yaxshi / Past / Bilmayman)_"),
+    ("kompyuter", "💻 *12/15* — Kompyuterda ishlash darajangiz:\n_(Erkin / O'rta / Bilmayman)_"),
+    ("lavozim", "🎯 *13/15* — Qaysi lavozimga murojaat qilmoqchisiz?\n_(Barista / Kassir / Konditer-sotuvchi)_"),
+    ("maosh", "💰 *14/15* — Kutilayotgan oylik maoshingiz:\n_(Masalan: 200,000 so'm)_"),
+    ("qoshimcha", "📝 *15/15* — Qo'shimcha ma'lumot yoki savol:\n_(Yo'q bo'lsa — Yo'q deb yozing)_"),
+]
 
-Ottimo Cafe ma'lumotlari:
-- Bo'sh o'rinlar: Barista, Kassir, Konditer-sotuvchi
-- Yosh: 20-35, Rus tili shart
-- Oylik: 120,000-250,000 so'm, har 10 kunda
-- 1-smena: 07:30-16:30, 2-smena: 16:00-24:00
-- Manzil: Chilonzor va Olmazor tumanlari
-- Tel: +998 99 060 33 53, Telegram: @Ottimo_hr
-- Chekmaydigan va spirtli ichimlik iste'mol qilmaydigan bo'lishi shart
-- Probatsiya: 1 oy"""
-
-# Tayyor javoblar — Gemini API ga bog'liq emas
+# ===================== STATIK JAVOBLAR =====================
 STATIC_RESPONSES = {
-    "👷 Ishchi qabul qilish": """👷 *ISHCHI QABUL QILISH*
-
-📌 *Bo'sh ish o'rinlari:*
-• Barista (alkogolsiz ichimliklar)
-• Kassir
-• Konditer-sotuvchi
-
-✅ *Talablar:*
-• Yosh: 20-35
-• Rus tilini bilish (shart!)
-• Soha bo'yicha tajriba (afzal)
-• Chaqqon, halol, mas'uliyatli
-• Chekmaydigan ✖️
-• Spirtli ichimlik iste'mol qilmaydigan ✖️
-
-📋 *Anketa qanday to'ldiriladi?*
-
-*1. Shaxsiy ma'lumotlar:*
-— Ism, Familiya, Sharif
-— Tug'ilgan sana va joy
-— Yashash manzili
-— Telefon raqami
-
-*2. Ta'lim:*
-— Maktab / Kollej / Universitet
-— O'quv yurti nomi, fakultet
-
-*3. Ish tajribasi (5 tagacha):*
-— Korxona nomi
-— Lavozim
-— Ishlagan yillari
-— Ishdan bo'shash sababi
-
-*4. Oilaviy holat:*
-— Bo'ydoq / Turmush qurgan / Ajrashgan
-— Oila a'zolari ma'lumotlari
-
-*5. Til bilimi:*
-— O'zbek tili
-— Rus tili ⭐ (shart!)
-— Ingliz tili
-
-*6. Qo'shimcha:*
-— Kompyuter bilimlari
-— Haydovchilik guvohnomasi
-— Kafil shaxs ma'lumotlari
-— Kutilayotgan maosh
-— Zararli odatlar (chekish, alkogol — YO'Q bo'lishi shart!)
-
-📞 *Bog'lanish:*
-Tel: +998 99 060 33 53
-Telegram: @Ottimo_hr""",
-
     "⏰ Ish vaqti": """⏰ *ISH VAQTI*
 
 🕐 *1-smena:* 07:30 — 16:30
 🕔 *2-smena:* 16:00 — 24:00
 
-📌 *Muhim qoidalar:*
+📅 *Smena almashinuvi:*
+• Smena jadvali har hafta yangilanadi
+• Dushanba kuni keyingi hafta jadvali e'lon qilinadi
+• Smena o'zgarishi kamida 1 kun oldin xabar beriladi
+• Almashtirish faqat menejer ruxsati bilan
+
+⚠️ *Muhim qoidalar:*
 • Smenaga 10 daqiqa oldin kelish shart
-• Kechikish uchun jarima: 50,000 so'm
-• Smena almashtirish faqat menejer ruxsati bilan
-• Ish kiyimi smenaga kelganda kiyiladi
+• Kechikish jarima: 50,000 so'm
+• Sababsiz kelmaslik — maoshdan ushlanadi
+• 3 marta kechikish — ogohlantirish beriladi
 
 🍽️ *Ovqatlanish:*
-• Xodimlar uchun bepul ovqat
-• Smena davomida belgilangan tanaffus
-
-📅 *Dam olish:*
-• Har oyda belgilangan dam olish kunlari
-• Jadval oldindan e'lon qilinadi""",
+• Har smena bepul ovqat beriladi
+• Belgilangan tanaffus vaqtida""",
 
     "🔄 Smena vaqti": """🔄 *SMENA JADVALI*
 
-┌─────────────────────────────┐
-│ 1-SMENA: 07:30 — 16:30     │
-│ 2-SMENA: 16:00 — 24:00     │
-└─────────────────────────────┘
+┌──────────────────────────┐
+│ 1-SMENA: 07:30 — 16:30  │
+│ 2-SMENA: 16:00 — 24:00  │
+└──────────────────────────┘
 
-📋 *Smena taqsimlash qoidalari:*
-• Jadval har hafta tuziladi
-• Smena o'zgarishi 1 kun oldin xabar beriladi
-• Almashtirish faqat menejer orqali
-• Ikkala smena xodimlarga navbat bilan beriladi
+📅 *Smena qachon almashinadi?*
+• Jadval har *dushanba* kuni e'lon qilinadi
+• Har xodim haftada kamida 1 ta dam olish kuni oladi
+• Ikkala smena navbat bilan taqsimlanadi
+• Dam olish kunlari oldindan belgilanadi
 
-⚠️ *Muhim:*
-• Smenaga kech qolish — 50,000 so'm jarima
-• Sababsiz kelmagan kun — ish haqidan ushlanadi
-• 3 marta kechikish — ogohlantirish
+⚠️ *Qoidalar:*
+• Smena o'zgartirish — menejer orqali
+• Kechikish: 50,000 so'm jarima
+• Smenani o'z vaqtida topshirish shart
 
-📞 Smena haqida: @Ottimo_hr""",
+📞 Jadval haqida: @Ottimo_hr""",
 
     "💰 Oylik maosh": """💰 *OYLIK MAOSH VA IMTIYOZLAR*
 
 💵 *Maosh (tajribaga qarab):*
 • Barista: 150,000 — 200,000 so'm
-• Kassir: 120,000 — 160,000 so'm  
+• Kassir: 120,000 — 160,000 so'm
 • Konditer-sotuvchi: 150,000 — 250,000 so'm
 
 🗓️ *To'lov tartibi:*
-• Har 10 kunda bir marta to'lanadi
+• Har *10 kunda* bir marta to'lanadi
 • Probatsiya davrida asosiy maosh
 
 🎁 *Imtiyozlar:*
-• Bepul ovqat (har smena)
-• O'sish va rivojlanish imkoniyati
-• Barqaror ish joyi
-• Jamoaviy tadbirlar
+• Bepul ovqat (har smena) 🍽️
+• Kasb o'rganish imkoniyati 📚
+• Barqaror ish joyi 🏢
+• O'sish va rivojlanish 📈
 
 ⚠️ *Jarimalar:*
 • Kechikish: 50,000 so'm
@@ -142,56 +96,60 @@ Telegram: @Ottimo_hr""",
 
     "📝 Ish shartnomasi": """📝 *ISH (MEHNAT) SHARTNOMASI*
 
-📌 *Shartnoma shartlari:*
-• Rasmiy mehnat shartnomasi tuziladi
-• O'zbekiston Mehnat kodeksi asosida
-• Probatsiya muddati: 1 oy
-
 📋 *Kerakli hujjatlar:*
 • Pasport (nusxa)
 • Mehnat daftarchasi (agar bo'lsa)
 • Diplom yoki attestat
-• 3x4 fotosurat
+• 3x4 fotosurat (2 dona)
+
+⏳ *Probatsiya:* 1 oy
 
 ✅ *Xodim huquqlari:*
 • Belgilangan maosh o'z vaqtida to'lanadi
-• Mehnat ta'tili (yillik)
+• Yillik mehnat ta'tili
 • Ijtimoiy sug'urta
 • Xavfsiz ish sharoiti
 
 ⚠️ *Xodim majburiyatlari:*
 • Ish tartibiga rioya qilish
 • Kafe standartlarini saqlash
-• Mijozlarga sifatli xizmat ko'rsatish
+• Mijozlarga sifatli xizmat
 • Sir saqlash
 
 📞 Shartnoma haqida: @Ottimo_hr""",
 
     "📊 Ish ma'lumotlari": """📊 *OTTIMO CAFE HAQIDA*
 
-🏢 *Biz haqimizda:*
-Ottimo — Toshkentdagi zamonaviy kafe. Bizning vazifamiz mijozlarga nafaqat desert, balki kayfiyat va zavq ulashish!
+☕ *Biz kim biz?*
+Ottimo — Toshkentdagi zamonaviy premium kafe. Bizning vazifamiz — mijozlarga nafaqat mazali taom, balki kayfiyat va zavq ulashish!
 
-📍 *Manzillar:*
-• Chilonzor tumani
-• Olmazor tumani
-
-👥 *Jamoamiz:*
-• 25+ xodim
-• Do'stona muhit
-• Professional jamoa
+🌟 *Nima uchun Ottimo?*
+✅ Rasmiy ish joyi va mehnat shartnomasi
+✅ Har 10 kunda maosh
+✅ Bepul ovqat har kuni
+✅ Professional jamoa (25+ xodim)
+✅ Kasb o'rganish va rivojlanish
+✅ Barqaror va qulay ish muhiti
+✅ Karyera o'sishi imkoniyati
+✅ Do'stona va qo'llab-quvvatlovchi muhit
+✅ Zamonaviy ish sharoiti
+✅ Tajriba orttirishga keng imkon
 
 💼 *Bo'sh o'rinlar:*
-• Barista ⭐
-• Kassir ⭐
-• Konditer-sotuvchi ⭐
+• ☕ Barista
+• 💳 Kassir
+• 🍰 Konditer-sotuvchi
 
-🌟 *Nima taklif qilamiz:*
-• Oylik: 120,000 — 250,000 so'm
-• Har 10 kunda to'lov
-• Bepul ovqat
-• Kasb o'rganish imkoniyati
-• Barqaror ish
+📍 *Filiallar:*
+
+1️⃣ *Nukus kinoteatri yonida*
+📌 Toshkent, Shifer ko'chasi, 71
+
+2️⃣ *Parus ostida*
+📌 Toshkent, Katartal ko'chasi, 60A/1
+
+3️⃣ *Talant International School ro'parasida*
+📌 Toshkent, Mirzo Ulug'bek tumani, Buyuk Ipak Yo'li, 31
 
 📞 *Bog'lanish:*
 Tel: +998 99 060 33 53
@@ -201,87 +159,80 @@ Telegram: @Ottimo_hr""",
 
 📋 *Muammo hal qilish tartibi:*
 
-*1-qadam:* Muammoni bevosita hamkasbingiz bilan hal qiling
-
-*2-qadam:* Hal bo'lmasa — smena menejeriga murojaat qiling
-
-*3-qadam:* Menejer ham hal qila olmasa — HR ga yozing:
-📱 @Ottimo_hr
+*1-qadam:* Hamkasbingiz bilan muloqot qiling
+*2-qadam:* Hal bo'lmasa — smena menejeriga
+*3-qadam:* HR ga yozing: @Ottimo_hr
 
 ⚠️ *Qoidalar:*
-• Ish joyida janjal — MUTLAQO MAN!
+• Ish joyida janjal — MAN ETILGAN!
 • Muammolarni mijozlar oldida muhokama qilmang
-• Har qanday shikoyat yozma shaklda qabul qilinadi
+• Har qanday shikoyat yozma shaklda
 
 ✅ *HR kafolat beradi:*
 • Har bir murojaat ko'rib chiqiladi
 • Adolatli qaror qabul qilinadi
 • Sir saqlash kafolatlanadi
 
-📞 HR bilan bog'lanish:
-Tel: +998 99 060 33 53
-Telegram: @Ottimo_hr""",
+📞 +998 99 060 33 53 | @Ottimo_hr""",
 
     "⚖️ Mehnat qonunlari": """⚖️ *MEHNAT QONUNLARI*
-
-📌 *O'zbekiston Mehnat Kodeksi asosida:*
 
 ✅ *Xodim HUQUQLARI:*
 • Belgilangan maosh o'z vaqtida olish
 • Yillik mehnat ta'tili (15-21 ish kuni)
-• Kasallik varag'i (to'liq to'lanadi)
+• Kasallik varag'i to'liq to'lanadi
 • Xavfsiz ish sharoiti
 • Rasmiy mehnat shartnomasi
 • Ijtimoiy sug'urta
 
 ⚠️ *Xodim MAJBURIYATLARI:*
 • Ish tartibiga rioya qilish
-• Ish joyiga o'z vaqtida kelish
-• Kafe mulkiga ehtiyotkorlik bilan munosabat
-• Maxfiy ma'lumotlarni oshkor etmaslik
+• O'z vaqtida kelish
+• Kafe mulkiga ehtiyotkorlik
+• Maxfiylikni saqlash
 
 🚫 *MAN ETILGAN:*
-• Ish vaqtida telefonda uzoq gaplashish
-• Ish joyida chekish
-• Spirtli ichimlik iste'mol qilish
+• Ish vaqtida uzoq telefon suhbati
+• Chekish
+• Spirtli ichimlik
 • Mijozlarga qo'pollik
 
-📞 Savollar uchun: @Ottimo_hr""",
+📞 @Ottimo_hr""",
 
     "❓ Savol va Javob": """❓ *KO'P BERILADIGAN SAVOLLAR*
 
 *❓ Qanday ish o'rinlari bor?*
 ✅ Barista, Kassir, Konditer-sotuvchi
 
-*❓ Yosh chegarasi qanday?*
-✅ 20 dan 35 yoshgacha
+*❓ Yosh chegarasi?*
+✅ 20-35 yosh
 
 *❓ Tajriba shart ekanmi?*
 ✅ Afzal, lekin o'rgatamiz
 
-*❓ Rus tili nima uchun shart?*
-✅ Mijozlarning ko'pi rus tilida muloqot qiladi
+*❓ Rus tili shart ekanmi?*
+✅ Ha, shart (mijozlar uchun)
 
 *❓ Oylik qancha?*
-✅ 120,000 — 250,000 so'm (tajribaga qarab)
+✅ 120,000 — 250,000 so'm
 
 *❓ Maosh qachon beriladi?*
-✅ Har 10 kunda bir marta
+✅ Har 10 kunda
 
-*❓ Ish vaqti qanday?*
-✅ 1-smena: 07:30-16:30 / 2-smena: 16:00-24:00
+*❓ Ish vaqti?*
+✅ 07:30-16:30 yoki 16:00-24:00
 
-*❓ Probatsiya qancha davom etadi?*
+*❓ Probatsiya?*
 ✅ 1 oy
 
 *❓ Ovqat beriladi?*
 ✅ Ha, bepul!
 
 *❓ Qayerda joylashgan?*
-✅ Chilonzor va Olmazor tumanlarida
+✅ Nukus kino, Parus, Talant school yonida
 
-*❓ Qanday murojaat qilish kerak?*
-✅ @Ottimo_hr yoki +998 99 060 33 53"""
+*❓ Murojaat?*
+✅ @Ottimo_hr | +998 99 060 33 53"""
 }
 
 MAIN_MENU = ReplyKeyboardMarkup([
@@ -292,7 +243,158 @@ MAIN_MENU = ReplyKeyboardMarkup([
     ["🆘 Yordam", "🗑️ Suhbatni tozalash"]
 ], resize_keyboard=True)
 
+# Foydalanuvchi holatlari
 user_sessions = {}
+user_anketa = {}  # anketa jarayoni
+
+def get_anketa_step(user_id):
+    return user_anketa.get(user_id, {}).get("step", None)
+
+async def start_anketa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_anketa[user_id] = {"step": 0, "data": {}}
+    key, question = ANKETA_STEPS[0]
+    await update.message.reply_text(
+        "📋 *OTTIMO CAFE — ARIZA ANKETA*\n\n"
+        "Savollarni birma-bir javob bering.\n"
+        "Bekor qilish uchun /bekor yozing.\n\n" + question,
+        parse_mode='Markdown',
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+async def process_anketa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+
+    if text == "/bekor":
+        user_anketa.pop(user_id, None)
+        await update.message.reply_text("❌ Anketa bekor qilindi.", reply_markup=MAIN_MENU)
+        return
+
+    step_data = user_anketa[user_id]
+    current_step = step_data["step"]
+    key, _ = ANKETA_STEPS[current_step]
+    step_data["data"][key] = text
+
+    next_step = current_step + 1
+
+    if next_step < len(ANKETA_STEPS):
+        step_data["step"] = next_step
+        _, next_question = ANKETA_STEPS[next_step]
+        await update.message.reply_text(next_question, parse_mode='Markdown')
+    else:
+        # Barcha savollar tugadi — tasdiqlash
+        data = step_data["data"]
+        summary = (
+            "✅ *ANKETANGIZ TAYYOR!*\n\n"
+            f"👤 Ism: {data.get('ism')} {data.get('familiya')} {data.get('sharif')}\n"
+            f"📅 Tug'ilgan sana: {data.get('tug_sana')}\n"
+            f"🌍 Millat: {data.get('millat')}\n"
+            f"🏠 Manzil: {data.get('yashash')}\n"
+            f"📱 Telefon: {data.get('telefon')}\n"
+            f"🎓 Ta'lim: {data.get('talim')}\n"
+            f"💼 Tajriba: {data.get('tajriba')}\n"
+            f"🗣️ Rus tili: {data.get('rus_tili')}\n"
+            f"🗣️ Ingliz tili: {data.get('ingliz_tili')}\n"
+            f"💻 Kompyuter: {data.get('kompyuter')}\n"
+            f"🎯 Lavozim: {data.get('lavozim')}\n"
+            f"💰 Kutilayotgan maosh: {data.get('maosh')}\n"
+            f"📝 Qo'shimcha: {data.get('qoshimcha')}\n\n"
+            "Tasdiqlaysizmi?"
+        )
+        confirm_keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ Tasdiqlash", callback_data="anketa_confirm"),
+                InlineKeyboardButton("❌ Bekor qilish", callback_data="anketa_cancel")
+            ]
+        ])
+        await update.message.reply_text(summary, parse_mode='Markdown', reply_markup=confirm_keyboard)
+
+async def anketa_callback(update, context):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+
+    if query.data == "anketa_confirm":
+        data = user_anketa.get(user_id, {}).get("data", {})
+        user_name = query.from_user.first_name or ""
+        username = query.from_user.username or "username_yoq"
+
+        msg = (
+            "📋 *YANGI ARIZA KELDI!*\n\n"
+            f"👤 {data.get('ism')} {data.get('familiya')} {data.get('sharif')}\n"
+            f"📅 {data.get('tug_sana')}\n"
+            f"🌍 {data.get('millat')}\n"
+            f"🏠 {data.get('yashash')}\n"
+            f"📱 {data.get('telefon')}\n"
+            f"🎓 {data.get('talim')}\n"
+            f"💼 {data.get('tajriba')}\n"
+            f"🗣️ Rus: {data.get('rus_tili')} | Ingliz: {data.get('ingliz_tili')}\n"
+            f"💻 Kompyuter: {data.get('kompyuter')}\n"
+            f"🎯 Lavozim: {data.get('lavozim')}\n"
+            f"💰 Maosh kutilmasi: {data.get('maosh')}\n"
+            f"📝 Qo'shimcha: {data.get('qoshimcha')}\n\n"
+            f"📲 Telegram: @{username}"
+        )
+
+        # Adminga yuborish
+        try:
+            await context.bot.send_message(
+                chat_id=f"@{ADMIN_USERNAME}",
+                text=msg,
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            logger.error(f"Admin ga yuborishda xato: {e}")
+
+        user_anketa.pop(user_id, None)
+        await query.edit_message_text(
+            "✅ *Anketangiz muvaffaqiyatli yuborildi!*\n\n"
+            "Tez orada @Ottimo_hr siz bilan bog'lanadi.\n"
+            "Ko'rib chiqish muddati: 1-3 ish kuni.\n\n"
+            "Rahmat! 🙏",
+            parse_mode='Markdown'
+        )
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="Bosh menyuga qaytish uchun /start bosing.",
+            reply_markup=MAIN_MENU
+        )
+
+    elif query.data == "anketa_cancel":
+        user_anketa.pop(user_id, None)
+        await query.edit_message_text("❌ Anketa bekor qilindi.")
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="Bosh menyuga qaytdingiz.",
+            reply_markup=MAIN_MENU
+        )
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_name = update.effective_user.first_name or "Foydalanuvchi"
+    await update.message.reply_text(
+        f"👋 Salom, *{user_name}*!\n\n"
+        f"🏢 *OTTIMO CAFE HR AGENTIGA XUSH KELIBSIZ!*\n\n"
+        f"Quyidagi bo'limlardan birini tanlang yoki savol yozing 👇",
+        parse_mode='Markdown',
+        reply_markup=MAIN_MENU
+    )
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🆘 *Yordam*\n\n"
+        "👷 Ishchi qabul — anketa to'ldirish\n"
+        "❓ Savol va Javob — FAQ\n"
+        "⏰ Ish vaqti — smena jadvali\n"
+        "💰 Oylik maosh — maosh va bonuslar\n"
+        "📝 Ish shartnomasi — shartlar\n"
+        "📊 Ish ma'lumotlari — filiallar va afzalliklar\n"
+        "🤝 Xodimlar muammolari — yordam\n"
+        "🔄 Smena vaqti — jadval\n"
+        "⚖️ Mehnat qonunlari — huquqlar",
+        parse_mode='Markdown',
+        reply_markup=MAIN_MENU
+    )
 
 def ask_gemini(user_id, user_text):
     history = user_sessions.get(user_id, [])
@@ -302,7 +404,8 @@ def ask_gemini(user_id, user_text):
             f"Foydalanuvchi: {h['user']}\nAgent: {h['agent']}"
             for h in history[-5:]
         ])
-    full_prompt = SYSTEM_PROMPT + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
+    system = "Sen Ottimo Cafe HR agentisan. Faqat O'zbek tilida javob ber. Do'stona va aniq javob ber."
+    full_prompt = system + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     payload = {
         "contents": [{"parts": [{"text": full_prompt}]}],
@@ -313,34 +416,14 @@ def ask_gemini(user_id, user_text):
     data = response.json()
     return data["candidates"][0]["content"]["parts"][0]["text"]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_name = update.effective_user.first_name or "Foydalanuvchi"
-    text = (
-        f"👋 Salom, *{user_name}*!\n\n"
-        f"🏢 *OTTIMO CAFE HR AGENTIGA XUSH KELIBSIZ!*\n\n"
-        f"Quyidagi bo'limlardan birini tanlang yoki savol yozing 👇"
-    )
-    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=MAIN_MENU)
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (
-        "🆘 *Yordam*\n\n"
-        "Menyudan mavzu tanlang yoki o'zingiz savol yozing!\n\n"
-        "👷 Ishchi qabul qilish\n"
-        "❓ Savol va Javob\n"
-        "⏰ Ish vaqti\n"
-        "💰 Oylik maosh\n"
-        "📝 Ish shartnomasi\n"
-        "📊 Ish ma'lumotlari\n"
-        "🤝 Xodimlar muammolari\n"
-        "🔄 Smena vaqti\n"
-        "⚖️ Mehnat qonunlari"
-    )
-    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=MAIN_MENU)
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
+
+    # Anketa jarayonida bo'lsa
+    if user_id in user_anketa:
+        await process_anketa(update, context)
+        return
 
     # Suhbatni tozalash
     if user_text == "🗑️ Suhbatni tozalash":
@@ -348,36 +431,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ Suhbat tozalandi!", reply_markup=MAIN_MENU)
         return
 
-    # Yordam
     if user_text == "🆘 Yordam":
         await help_command(update, context)
         return
 
-    # Admin
     if user_text == "👨‍💼 Admin":
         await update.message.reply_text(
-            "👨‍💼 *Admin*\n\n📱 Telegram: @Ottimo_hr\n📞 Tel: +998 99 060 33 53\n\nIsh vaqti: 09:00-18:00",
+            "👨‍💼 *Admin*\n\n📱 Telegram: @Ottimo_hr\n📞 +998 99 060 33 53\n\nIsh vaqti: 09:00-18:00",
             parse_mode='Markdown', reply_markup=MAIN_MENU
         )
         return
 
-    # Qo'llab-quvvatlash
     if user_text == "📞 Qo'llab-quvvatlash":
         await update.message.reply_text(
-            "📞 *Qo'llab-quvvatlash*\n\n📱 Tel: +998 99 060 33 53\n💬 Telegram: @Ottimo_hr\n\n📍 Chilonzor va Olmazor tumanlari",
+            "📞 *Qo'llab-quvvatlash*\n\n📱 +998 99 060 33 53\n💬 @Ottimo_hr\n\n"
+            "📍 *Filiallar:*\n"
+            "1️⃣ Nukus kino yonida — Shifer ko'chasi, 71\n"
+            "2️⃣ Parus ostida — Katartal ko'chasi, 60A/1\n"
+            "3️⃣ Talant school ro'parasida — Buyuk Ipak Yo'li, 31",
             parse_mode='Markdown', reply_markup=MAIN_MENU
         )
         return
 
-    # Qo'shimcha savol
     if user_text == "➕ Qo'shimcha savol":
-        await update.message.reply_text(
-            "➕ Savolingizni yozing, javob beraman! 👇",
-            reply_markup=MAIN_MENU
-        )
+        await update.message.reply_text("➕ Savolingizni yozing! 👇", reply_markup=MAIN_MENU)
         return
 
-    # Tayyor javoblar — tugma bosilganda
+    # Ishchi qabul — anketa boshlash
+    if user_text == "👷 Ishchi qabul qilish":
+        await start_anketa(update, context)
+        return
+
+    # Boshqa tugmalar — statik javob
     if user_text in STATIC_RESPONSES:
         await update.message.reply_text(
             STATIC_RESPONSES[user_text],
@@ -386,7 +471,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Erkin savol — Gemini ga yuborish
+    # Erkin savol — Gemini
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     if user_id not in user_sessions:
         user_sessions[user_id] = []
@@ -397,7 +482,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Xato: {e}")
         await update.message.reply_text(
-            "⚠️ Xatolik yuz berdi. Iltimos @Ottimo_hr ga murojaat qiling.",
+            "⚠️ Xatolik yuz berdi. @Ottimo_hr ga murojaat qiling.",
             reply_markup=MAIN_MENU
         )
 
@@ -405,6 +490,7 @@ def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CallbackQueryHandler(anketa_callback, pattern="^anketa_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     logger.info("Bot ishga tushdi!")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
