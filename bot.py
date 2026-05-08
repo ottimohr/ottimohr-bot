@@ -88,7 +88,6 @@ SMENA_MENU = ReplyKeyboardMarkup([
 # ===================== STATIK JAVOBLAR =====================
 STATIC_RESPONSES = {
     "⏰ Ish vaqti": "⏰ *ISH VAQTI*\n\n🌅 *1-smena:* 07:30 — 16:30\n🌆 *2-smena:* 16:00 — 24:00\n\n💰 Kuniga taxminan *200,000 so'm*\n\n📅 *Smena almashinuvi:*\n• Jadval har *dushanba* yangilanadi\n• O'zgarish 1 kun oldin xabar beriladi\n• Almashtirish faqat menejer ruxsati bilan\n\n⚠️ Kechikish jarima: 50,000 so'm",
-    "🔄 Smena vaqti": "🔄 *SMENA JADVALI*\n\n🌅 1-SMENA: 07:30 — 16:30\n🌆 2-SMENA: 16:00 — 24:00\n\n💰 Kuniga taxminan *200,000 so'm daromad!*\n\n📅 Jadval har *dushanba* e'lon qilinadi\n• Har xodim haftada 1 dam olish kuni\n• Smena o'zgartirish — menejer orqali\n\n📞 @Ottimo_hr",
     "💰 Oylik maosh": "💰 *OYLIK MAOSH*\n\n• Barista: 150,000-200,000 so'm\n• Kassir: 120,000-160,000 so'm\n• Konditer: 150,000-250,000 so'm\n\n💰 *Kuniga ~200,000 so'm!*\n\n🗓️ Har *10 kunda* to'lanadi\n🍽️ Bepul ovqat\n📈 Karyera o'sishi",
     "📝 Ish shartnomasi": "📝 *ISH SHARTNOMASI*\n\n📋 Kerakli hujjatlar:\n• Pasport nusxasi\n• Mehnat daftarchasi\n• Diplom/attestat\n• 3x4 foto (2 dona)\n\n⏳ Probatsiya: 1 oy\n\n✅ Huquqlar:\n• O'z vaqtida maosh\n• Yillik ta'til\n• Ijtimoiy sug'urta\n\n📞 @Ottimo_hr",
     "📊 Ish ma'lumotlari": "📊 *OTTIMO CAFE*\n\n☕ Toshkentdagi zamonaviy premium kafe!\n\n🌟 *Afzalliklar:*\n✅ Rasmiy ish joyi\n✅ Kuniga ~200,000 so'm\n✅ Har 10 kunda maosh\n✅ Bepul ovqat\n✅ Karyera o'sishi\n✅ Do'stona muhit\n✅ 25+ professional xodim\n\n💼 Bo'sh o'rinlar:\n• ☕ Barista\n• 💳 Kassir\n• 🍰 Konditer-sotuvchi\n\n📍 *3 ta Filial:*\n1️⃣ Nukus kino yonida — Shifer, 71\n2️⃣ Parus ostida — Katartal, 60A/1\n3️⃣ Talant school ro'parasida — Buyuk Ipak Yo'li, 31\n\n📞 +998 99 060 33 53 | @Ottimo_hr",
@@ -101,8 +100,8 @@ STATIC_RESPONSES = {
 MAIN_MENU = ReplyKeyboardMarkup([
     ["👷 Ishchi qabul qilish", "❓ Savol va Javob", "⏰ Ish vaqti"],
     ["💰 Oylik maosh", "📝 Ish shartnomasi", "📊 Ish ma'lumotlari"],
-    ["🤝 Xodimlar muammolari", "🔄 Smena vaqti", "⚖️ Mehnat qonunlari"],
-    ["👨‍💼 Admin panel", "📞 Qo'llab-quvvatlash", "➕ Qo'shimcha savol"],
+    ["🤝 Xodimlar muammolari", "📍 Filiallar", "⚖️ Mehnat qonunlari"],
+    ["👨‍💼 Admin", "📞 Qo'llab-quvvatlash", "➕ Qo'shimcha savol"],
     ["🆘 Yordam", "🗑️ Suhbatni tozalash"]
 ], resize_keyboard=True)
 
@@ -132,7 +131,7 @@ async def show_admin_panel(update, context):
     )
 
 async def show_xodimlar(update, context):
-    xodimlar = db_query("SELECT id, ism, lavozim, smena, holat FROM xodimlar WHERE holat='aktiv'", fetchall=True)
+    xodimlar = db_query("SELECT id, ism, lavozim, smena FROM xodimlar WHERE holat='aktiv'", fetchall=True)
     if not xodimlar:
         await update.message.reply_text("📭 Xodimlar ro'yxati bo'sh.", reply_markup=ADMIN_MENU)
         return
@@ -145,13 +144,10 @@ async def show_statistika(update, context):
     jami = db_query("SELECT COUNT(*) FROM xodimlar WHERE holat='aktiv'", fetchone=True)[0]
     arizalar = db_query("SELECT COUNT(*) FROM arizalar WHERE holat='kutilmoqda'", fetchone=True)[0]
     kechikish = db_query("SELECT COUNT(*) FROM kechikishlar", fetchone=True)[0]
-    text = (
-        "📊 *STATISTIKA*\n\n"
-        f"👥 Aktiv xodimlar: *{jami}*\n"
-        f"📋 Kutilayotgan arizalar: *{arizalar}*\n"
-        f"⚠️ Jami kechikishlar: *{kechikish}*"
+    await update.message.reply_text(
+        f"📊 *STATISTIKA*\n\n👥 Aktiv xodimlar: *{jami}*\n📋 Kutilayotgan arizalar: *{arizalar}*\n⚠️ Jami kechikishlar: *{kechikish}*",
+        parse_mode='Markdown', reply_markup=ADMIN_MENU
     )
-    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=ADMIN_MENU)
 
 async def show_arizalar(update, context):
     arizalar = db_query("SELECT id, ism, telefon, lavozim, smena, sana FROM arizalar WHERE holat='kutilmoqda'", fetchall=True)
@@ -169,28 +165,22 @@ async def start_anketa(update, context):
     user_anketa[user_id] = {"step": 0, "data": {}}
     _, question = ANKETA_STEPS[0]
     await update.message.reply_text(
-        "📋 *OTTIMO CAFE — ARIZA ANKETA*\n\n"
-        "Savollarni birma-bir javob bering.\n"
-        "Bekor qilish: /bekor\n\n" + question,
-        parse_mode='Markdown',
-        reply_markup=ReplyKeyboardRemove()
+        "📋 *OTTIMO CAFE — ARIZA ANKETA*\n\nSavollarni birma-bir javob bering.\nBekor qilish: /bekor\n\n" + question,
+        parse_mode='Markdown', reply_markup=ReplyKeyboardRemove()
     )
 
 async def process_anketa(update, context):
     user_id = update.effective_user.id
     text = update.message.text
-
     if text == "/bekor":
         user_anketa.pop(user_id, None)
         await update.message.reply_text("❌ Anketa bekor qilindi.", reply_markup=MAIN_MENU)
         return
-
     step_data = user_anketa[user_id]
     current_step = step_data["step"]
     key, _ = ANKETA_STEPS[current_step]
     step_data["data"][key] = text
     next_step = current_step + 1
-
     if next_step < len(ANKETA_STEPS):
         step_data["step"] = next_step
         next_key, next_question = ANKETA_STEPS[next_step]
@@ -200,11 +190,10 @@ async def process_anketa(update, context):
             await update.message.reply_text(next_question, parse_mode='Markdown', reply_markup=ReplyKeyboardRemove())
     else:
         data = step_data["data"]
-        # Bazaga saqlash
         db_query(
             "INSERT INTO arizalar (ism, telefon, lavozim, smena, sana) VALUES (?,?,?,?,?)",
-            (data.get('ism_familiya_sharif'), data.get('telefon'),
-             data.get('lavozim'), data.get('smena'), datetime.now().strftime("%d.%m.%Y"))
+            (data.get('ism_familiya_sharif'), data.get('telefon'), data.get('lavozim'),
+             data.get('smena'), datetime.now().strftime("%d.%m.%Y"))
         )
         summary = (
             "✅ *ANKETANGIZ TAYYOR! Tekshirib ko'ring:*\n\n"
@@ -234,7 +223,6 @@ async def anketa_callback(update, context):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
-
     if query.data == "anketa_confirm":
         data = user_anketa.get(user_id, {}).get("data", {})
         username = query.from_user.username or "username_yoq"
@@ -244,15 +232,23 @@ async def anketa_callback(update, context):
             f"📱 {data.get('telefon')}\n"
             f"🎯 Lavozim: *{data.get('lavozim')}*\n"
             f"⏰ Smena: *{data.get('smena')}*\n"
-            f"🎓 {data.get('talim')} | 💼 {data.get('tajriba')}\n"
+            f"📅 Tug'ilgan: {data.get('tug_sana')}\n"
+            f"🏠 Manzil: {data.get('yashash')}\n"
+            f"🎓 Ta'lim: {data.get('talim')}\n"
+            f"💼 Tajriba: {data.get('tajriba')}\n"
             f"🗣️ Rus: {data.get('rus_tili')} | Ingliz: {data.get('ingliz_tili')}\n"
-            f"📲 @{username}"
+            f"💻 Kompyuter: {data.get('kompyuter')}\n"
+            f"📝 Qo'shimcha: {data.get('qoshimcha')}\n\n"
+            f"📲 Telegram: @{username}"
         )
         try:
-            await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg, parse_mode='Markdown')
+            await context.bot.send_message(
+                chat_id=f"@{ADMIN_USERNAME}",
+                text=msg,
+                parse_mode='Markdown'
+            )
         except Exception as e:
             logger.error(f"Admin ga yuborishda xato: {e}")
-
         user_anketa.pop(user_id, None)
         await query.edit_message_text(
             "✅ *Anketangiz yuborildi!*\n\n"
@@ -261,7 +257,6 @@ async def anketa_callback(update, context):
             parse_mode='Markdown'
         )
         await context.bot.send_message(chat_id=user_id, text="Bosh menyu:", reply_markup=MAIN_MENU)
-
     elif query.data == "anketa_cancel":
         user_anketa.pop(user_id, None)
         await query.edit_message_text("❌ Anketa bekor qilindi.")
@@ -273,8 +268,7 @@ async def start_add_xodim(update, context):
     admin_state[user_id] = {"action": "add_xodim", "step": 0, "data": {}}
     await update.message.reply_text(
         "➕ *YANGI XODIM QO'SHISH*\n\n" + ADMIN_ADD_STEPS[0][1],
-        parse_mode='Markdown',
-        reply_markup=ReplyKeyboardRemove()
+        parse_mode='Markdown', reply_markup=ReplyKeyboardRemove()
     )
 
 async def process_add_xodim(update, context):
@@ -285,7 +279,6 @@ async def process_add_xodim(update, context):
     key, _ = ADMIN_ADD_STEPS[current_step]
     state["data"][key] = text
     next_step = current_step + 1
-
     if next_step < len(ADMIN_ADD_STEPS):
         state["step"] = next_step
         await update.message.reply_text(ADMIN_ADD_STEPS[next_step][1], reply_markup=ReplyKeyboardRemove())
@@ -298,36 +291,28 @@ async def process_add_xodim(update, context):
         admin_state.pop(user_id, None)
         await update.message.reply_text(
             f"✅ *{data['ism']}* xodimlar ro'yxatiga qo'shildi!",
-            parse_mode='Markdown',
-            reply_markup=ADMIN_MENU
+            parse_mode='Markdown', reply_markup=ADMIN_MENU
         )
 
 # ===================== KECHIKISH =====================
 async def start_kechikish(update, context):
-    user_id = update.effective_user.id
     xodimlar = db_query("SELECT id, ism FROM xodimlar WHERE holat='aktiv'", fetchall=True)
     if not xodimlar:
         await update.message.reply_text("📭 Xodimlar yo'q.", reply_markup=ADMIN_MENU)
         return
     keyboard = [[InlineKeyboardButton(x[1], callback_data=f"kechik_{x[0]}")] for x in xodimlar]
-    await update.message.reply_text(
-        "⚠️ *Qaysi xodim kechikdi?*",
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    await update.message.reply_text("⚠️ *Qaysi xodim kechikdi?*", parse_mode='Markdown',
+                                     reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def kechikish_callback(update, context):
     query = update.callback_query
     await query.answer()
     xodim_id = int(query.data.split("_")[1])
     xodim = db_query("SELECT ism FROM xodimlar WHERE id=?", (xodim_id,), fetchone=True)
-    db_query(
-        "INSERT INTO kechikishlar (xodim_id, sana, minut) VALUES (?,?,?)",
-        (xodim_id, datetime.now().strftime("%d.%m.%Y"), 15)
-    )
+    db_query("INSERT INTO kechikishlar (xodim_id, sana, minut) VALUES (?,?,?)",
+             (xodim_id, datetime.now().strftime("%d.%m.%Y"), 15))
     await query.edit_message_text(
-        f"⚠️ *{xodim[0]}* kechikishi belgilandi!\n"
-        f"💸 Jarima: 50,000 so'm",
+        f"⚠️ *{xodim[0]}* kechikishi belgilandi!\n💸 Jarima: 50,000 so'm",
         parse_mode='Markdown'
     )
 
@@ -335,11 +320,8 @@ async def kechikish_callback(update, context):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name or "Foydalanuvchi"
     await update.message.reply_text(
-        f"👋 Salom, *{user_name}*!\n\n"
-        f"🏢 *OTTIMO CAFE HR AGENTIGA XUSH KELIBSIZ!*\n\n"
-        f"Quyidagi bo'limlardan birini tanlang 👇",
-        parse_mode='Markdown',
-        reply_markup=MAIN_MENU
+        f"👋 Salom, *{user_name}*!\n\n🏢 *OTTIMO CAFE HR AGENTIGA XUSH KELIBSIZ!*\n\nQuyidagi bo'limlardan birini tanlang 👇",
+        parse_mode='Markdown', reply_markup=MAIN_MENU
     )
 
 def ask_gemini(user_id, user_text):
@@ -362,22 +344,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
 
-    # Anketa jarayoni
     if user_id in user_anketa:
         await process_anketa(update, context)
         return
 
-    # Admin xodim qo'shish jarayoni
     if user_id in admin_state:
-        state = admin_state[user_id]
-        if state.get("action") == "add_xodim":
+        if admin_state[user_id].get("action") == "add_xodim":
             await process_add_xodim(update, context)
             return
 
-    # Admin panel
-    if user_text == "👨‍💼 Admin panel":
-        await show_admin_panel(update, context)
-        return
+    # Admin panel tugmalari
     if user_text == "👥 Xodimlar ro'yxati":
         await show_xodimlar(update, context)
         return
@@ -397,7 +373,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Bosh menyu:", reply_markup=MAIN_MENU)
         return
 
-    # Asosiy menyu
+    # Asosiy menyu tugmalari
     if user_text == "🗑️ Suhbatni tozalash":
         user_sessions[user_id] = []
         await update.message.reply_text("✅ Suhbat tozalandi!", reply_markup=MAIN_MENU)
@@ -405,14 +381,43 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_text == "🆘 Yordam":
         await update.message.reply_text("Menyudan tanlang yoki savol yozing!", reply_markup=MAIN_MENU)
         return
+
+    # 👨‍💼 Admin — faqat @Ottimo_hr linki
     if user_text == "👨‍💼 Admin":
-        await show_admin_panel(update, context)
+        await update.message.reply_text(
+            "👨‍💼 *ADMIN*\n\n"
+            "Ottimo HR boshqaruvi:\n\n"
+            "📱 Telegram: @Ottimo_hr\n"
+            "📞 Tel: +998 99 060 33 53\n\n"
+            "👉 [Admin ga yozish](https://t.me/Ottimo_hr)",
+            parse_mode='Markdown',
+            reply_markup=MAIN_MENU,
+            disable_web_page_preview=True
+        )
         return
+
+    # 📍 Filiallar
+    if user_text == "📍 Filiallar":
+        await update.message.reply_text(
+            "📍 *OTTIMO CAFE FILIALLARI*\n\n"
+            "1️⃣ *Nukus kinoteatri yonida*\n"
+            "📌 Toshkent, Shifer ko'chasi, 71\n\n"
+            "2️⃣ *Parus ostida*\n"
+            "📌 Toshkent, Katartal ko'chasi, 60A/1\n\n"
+            "3️⃣ *Talant International School ro'parasida*\n"
+            "📌 Toshkent, Mirzo Ulug'bek tumani, Buyuk Ipak Yo'li, 31\n\n"
+            "📞 +998 99 060 33 53\n"
+            "💬 @Ottimo_hr",
+            parse_mode='Markdown',
+            reply_markup=MAIN_MENU
+        )
+        return
+
     if user_text == "📞 Qo'llab-quvvatlash":
         await update.message.reply_text(
-            "📞 *Qo'llab-quvvatlash*\n\n📱 +998 99 060 33 53\n💬 @Ottimo_hr\n\n"
-            "📍 Filiallar:\n1️⃣ Shifer, 71\n2️⃣ Katartal, 60A/1\n3️⃣ Buyuk Ipak Yo'li, 31",
-            parse_mode='Markdown', reply_markup=MAIN_MENU)
+            "📞 *Qo'llab-quvvatlash*\n\n📱 +998 99 060 33 53\n💬 @Ottimo_hr",
+            parse_mode='Markdown', reply_markup=MAIN_MENU
+        )
         return
     if user_text == "➕ Qo'shimcha savol":
         await update.message.reply_text("➕ Savolingizni yozing! 👇", reply_markup=MAIN_MENU)
