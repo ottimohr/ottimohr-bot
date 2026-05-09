@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-ADMIN_USERNAME = "mr_jalilov7"
-ADMIN_CHAT_ID = 8134379339
+ADMIN_USERNAME = "Ibr0kh1_M"
+ADMIN_CHAT_ID = 6613741078
 
 # ===================== DATABASE =====================
 def init_db():
