@@ -448,7 +448,7 @@ def ask_gemini(user_id, user_text):
         )
 
     full_prompt = system + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_API_KEY}"
     r = requests.post(url, json={"contents": [{"parts": [{"text": full_prompt}]}],
                                   "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1000}}, timeout=30)
     r.raise_for_status()
