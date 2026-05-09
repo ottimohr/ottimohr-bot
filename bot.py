@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-ADMIN_USERNAME = "Ibr0kh1_M"
-ADMIN_CHAT_ID = 6613741078
+ADMIN_USERNAME = "mr_jalilov7"
+ADMIN_CHAT_ID = 206004279
 
 # ===================== DATABASE =====================
 def init_db():
@@ -47,66 +47,122 @@ def db_query(sql, params=(), fetchall=False, fetchone=False):
     conn.close()
     return c.lastrowid
 
-# ===================== TO'LIQ ANKETA SAVOLLARI (PDF asosida) =====================
+# ===================== ANKETA SAVOLLARI =====================
 ANKETA_STEPS = [
-    ("ism_familiya_sharif",   "👤 *1/32* — Ism, Familiya va Sharifingiz:\n_(Masalan: Ibrohim Karimov Aliyevich)_"),
-    ("tug_sana",              "📅 *2/32* — Tug'ilgan sanangiz:\n_(Masalan: 15.03.2000)_"),
-    ("millat",                "🌍 *3/32* — Millatingiz:\n_(Masalan: O'zbek)_"),
-    ("tug_joy",               "🗺 *4/32* — Tug'ilgan joyingiz (viloyat, tuman):"),
-    ("yashash_joy",           "🏠 *5/32* — Doimiy yashash manzilingiz:\n_(Ko'cha, uy raqami)_"),
-    ("turar_joy",             "🏘 *6/32* — Turar joy turingiz:\n_(Dom / Hovli)_"),
-    ("telefon",               "📱 *7/32* — Telefon raqamingiz:\n_(+998 90 123 45 67)_"),
-    ("talim",                 "🎓 *8/32* — Ta'lim darajangiz:\n_(Maktab 11-sinf / Kollej-litsey / Institut-universitet)_"),
-    ("oquv_yurti",            "🏫 *9/32* — Qaysi o'quv yurtini qachon tamomlagansiz?\n_(Nomi, fakultet, yillar. Yo'q — Yo'q)_"),
-    ("oldingi_ish",           "💼 *10/32* — Oldingi ish joylaringiz:\n_(Korxona, lavozim, yillar, bo'shash sababi. Yo'q — Yo'q)_"),
-    ("chet_safari",           "✈️ *11/32* — Chet el safariga chiqqanmisiz?\n_(Ha — qayerga? / Yo'q)_"),
-    ("oilaviy_holat",         "💑 *12/32* — Oilaviy holatingiz:\n_(Bo'ydoq / Turmush qurgan / Ajrashgan)_"),
-    ("oila_azosi",            "👨‍👩‍👧 *13/32* — Oila a'zolaringiz:\n_(Ism, tug'ilgan sana, ish joyi, telefon. Yo'q — Yo'q)_"),
-    ("sudlanganmi",           "⚖️ *14/32* — Sudlanganmisiz?\n_(Yo'q / Ha — sababi)_"),
-    ("avtomobil",             "🚗 *15/32* — Shaxsiy avtomobilingiz bormi?\n_(Yo'q / Ha — rusumi)_"),
-    ("haydovchilik",          "🪪 *16/32* — Haydovchilik guvohnomangiz bormi?\n_(Yo'q / Ha — turi: A/B/C/D/E)_"),
-    ("uzbek_tili",            "🗣 *17/32* — O'zbek tilini bilish darajangiz:\n_(A'lo / Yaxshi / Past)_"),
-    ("rus_tili",              "🗣 *18/32* — Rus tilini bilish darajangiz:\n_(A'lo / Yaxshi / Past / Bilmayman)_"),
-    ("ingliz_tili",           "🗣 *19/32* — Ingliz tilini bilish darajangiz:\n_(A'lo / Yaxshi / Past / Bilmayman)_"),
-    ("boshqa_til",            "🗣 *20/32* — Boshqa til bilasizmi?\n_(Yo'q / Ha — qaysi va darajasi)_"),
-    ("qobiliyat",             "⭐ *21/32* — Alohida qobiliyatlaringiz:\n_(Yo'q bo'lsa — Yo'q)_"),
-    ("bosh_vaqt",             "🎯 *22/32* — Bo'sh vaqtingizni qanday o'tkazasiz?"),
-    ("kompyuter",             "💻 *23/32* — Kompyuterda erkin ishlaysizmi?\n_(Ha / Yo'q / O'rta)_"),
-    ("qayerdan_bildingiz",    "📢 *24/32* — Kompaniyamiz haqida qayerdan bildingiz?\n_(Do'stim / Instagram / OLX...)_"),
-    ("kafil",                 "🤝 *25/32* — Ishlashingizga kafolat bera oladigan shaxs:\n_(Ismi, aloqasi, ish joyi, telefon. Yo'q — Yo'q)_"),
-    ("tavsiya",               "📄 *26/32* — Oxirgi ish joyingizdan tavsiya xati bera oladimi?\n_(Ha — ismi, lavozimi, telefon. Yo'q — Yo'q)_"),
-    ("surushtirishga_rozi",   "🔍 *27/32* — Oxirgi ish joyingizdan surishtirishimizga rozimisiz?\n_(Ha / Yo'q)_"),
-    ("oldingi_maosh",         "💵 *28/32* — Oxirgi ish joyingizda qancha oylik olgan edingiz?"),
-    ("kutilayotgan_maosh",    "💰 *29/32* — Bizdan qancha oylik kutasiz?"),
-    ("ishlash_muddati",       "📆 *30/32* — Bizda qancha muddat ishlashni rejalashtirasiz?\n_(Uzoq muddatga / 1 yil / Bilmayman)_"),
-    ("qolib_ishlash",         "🕐 *31/32* — Ish tugagandan keyin qolib ishlash kerak bo'lsa rozimisiz?\n_(Ha / Yo'q)_"),
-    ("smena",                 "⏰ *32/32* — Qaysi smenada ishlashni xohlaysiz?\n\n💰 Kuniga taxminan *200,000 so'm* daromad!\n\n🌅 Ertalab: 07:30-16:30\n🌆 Kechqurun: 16:00-24:00"),
+    ("ism_familiya_sharif", "👤 1/31 — Ism, Familiya va Sharifingizni kiriting:\n(Masalan: Ibrohim Karimov Aliyevich)"),
+    ("tug_sana",            "📅 2/31 — Tug'ilgan sanangizni kiriting:\n(Masalan: 15.03.2000)"),
+    ("millat",              "🌍 3/31 — Millatingizni kiriting:\n(Masalan: O'zbek)"),
+    ("tug_joy",             "🗺 4/31 — Tug'ilgan joyingizni kiriting (viloyat, tuman):\n(Masalan: Toshkent shahri, Chilonzor tumani)"),
+    ("yashash_joy",         "🏠 5/31 — Doimiy yashash manzilingizni kiriting:\n(Ko'cha, uy raqami)"),
+    ("turar_joy",           "🏘 6/31 — Turar joy turingizni belgilang:\n(Dom / Hovli)"),
+    ("telefon",             "📱 7/31 — Telefon raqamingizni kiriting:\n(Masalan: +998 90 123 45 67)"),
+    ("talim",               "🎓 8/31 — Ta'lim darajangizni belgilang:\n(Maktab 11-sinf / Kollej-litsey / Institut-universitet)"),
+    ("oquv_yurti",          "🏫 9/31 — Qaysi o'quv yurtini va qachon tamomlagansiz?\n(O'quv yurti nomi, fakultet, o'qish yillari.\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("oldingi_ish",         "💼 10/31 — Oldingi ish joylaringiz haqida ma'lumot bering:\n(Korxona nomi, lavozim, ishlagan yillar, ishdan bo'shash sababi.\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("chet_safari",         "✈️ 11/31 — Chet el safariga chiqqanmisiz?\n(Ha bo'lsa — qaysi mamlakatga va maqsad nima edi?\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("oilaviy_holat",       "💑 12/31 — Oilaviy holatingizni belgilang:\n(Bo'ydoq / Turmush qurgan / Ajrashgan)"),
+    ("oila_azosi",          "👨‍👩‍👧 13/31 — Oila a'zolaringiz haqida ma'lumot bering:\n(Ism-familiya, tug'ilgan sana, ish joyi, telefon raqami.\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("sudlanganmi",         "⚖️ 14/31 — Sudlanganmisiz?\n(Yo'q / Ha bo'lsa — sababini yozing)"),
+    ("avtomobil",           "🚗 15/31 — Shaxsiy avtomobilingiz bormi?\n(Yo'q / Ha bo'lsa — rusumini yozing)"),
+    ("haydovchilik",        "🪪 16/31 — Haydovchilik guvohnomangiz bormi?\n(Yo'q / Ha bo'lsa — turini yozing: A, B, C, D yoki E)"),
+    ("uzbek_tili",          "🗣 17/31 — O'zbek tilini qay darajada bilasiz?\n(A'lo / Yaxshi / Past)"),
+    ("rus_tili",            "🗣 18/31 — Rus tilini qay darajada bilasiz?\n(A'lo / Yaxshi / Past / Bilmayman)"),
+    ("ingliz_tili",         "🗣 19/31 — Ingliz tilini qay darajada bilasiz?\n(A'lo / Yaxshi / Past / Bilmayman)"),
+    ("boshqa_til",          "🗣 20/31 — Boshqa tillarni bilasizmi?\n(Yo'q / Ha bo'lsa — qaysi til va darajasini yozing)"),
+    ("qobiliyat",           "⭐ 21/31 — Alohida qobiliyatlaringiz bormi?\n(Masalan: oshpazlik, rasmchilik, musiqa...\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("bosh_vaqt",           "🎯 22/31 — Bo'sh vaqtingizni qanday o'tkazasiz?\n(Masalan: sport, kitob o'qish, sayohat...)"),
+    ("kompyuter",           "💻 23/31 — Kompyuterda ishlash darajangizni belgilang:\n(Erkin / O'rta darajada / Bilmayman)"),
+    ("qayerdan_bildingiz",  "📢 24/31 — Kompaniyamiz haqida qayerdan bildingiz yoki kim taklif qildi?\n(Masalan: do'stim, Instagram, OLX...)"),
+    ("kafil",               "🤝 25/31 — Sizni korxonamizda ishlashingizga kafolat bera oladigan shaxs bormi?\n(Ismi, siz bilan aloqasi, ish joyi va telefon raqami.\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("tavsiya",             "📄 26/31 — Oxirgi ish joyingizdan tavsiya xati bera oladimi?\n(Ha bo'lsa — ismi, lavozimi va telefon raqami.\nYo'q bo'lsa — Yo'q deb yozing)"),
+    ("surushtirishga_rozi", "🔍 27/31 — Oxirgi ish joyingizdan surishtirishimizga rozimisiz?\n(Ha / Yo'q)"),
+    ("oldingi_maosh",       "💵 28/31 — Oxirgi ish joyingizda qancha oylik maosh olgan edingiz?\n(Masalan: 1 500 000 so'm)"),
+    ("kutilayotgan_maosh",  "💰 29/31 — Bizdan qancha oylik maosh kutasiz?\n(Masalan: 2 000 000 so'm)"),
+    ("ishlash_muddati",     "📆 30/31 — Bizning korxonamizda qancha muddat ishlashni rejalashtirasiz?\n(Masalan: uzoq muddatga / 1 yil / hali aniq emas)"),
+    ("smena",               "⏰ 31/31 — Qaysi vaqtda ishlashni xohlaysiz?\n\n☀️ Kunduzi (07:30 — 16:30)\n🌙 Kechki payt (16:00 — 24:00)\n🔄 Ikkalasi ham bo'ladi"),
 ]
 
 SMENA_MENU = ReplyKeyboardMarkup([
-    ["🌅 Ertalab (07:30-16:30)"],
-    ["🌆 Kechqurun (16:00-24:00)"],
+    ["☀️ Kunduzi (07:30-16:30)"],
+    ["🌙 Kechki payt (16:00-24:00)"],
     ["🔄 Ikkalasi ham bo'ladi"]
 ], resize_keyboard=True, one_time_keyboard=True)
 
 # ===================== STATIK JAVOBLAR =====================
 STATIC_RESPONSES = {
-    "⏰ Ish vaqti": "⏰ *ISH VAQTI*\n\n🌅 *1-smena:* 07:30 — 16:30\n🌆 *2-smena:* 16:00 — 24:00\n\n💰 Kuniga taxminan *200,000 so'm*\n\n📅 Jadval har *dushanba* yangilanadi\n• O'zgarish 1 kun oldin xabar beriladi\n\n⚠️ Kechikish jarima: 50,000 so'm\n🍽️ Har smena bepul ovqat",
-    "💰 Oylik maosh": "💰 *OYLIK MAOSH*\n\n• Barista: 150,000-200,000 so'm\n• Kassir: 120,000-160,000 so'm\n• Konditer: 150,000-250,000 so'm\n\n💰 *Kuniga ~200,000 so'm!*\n🗓️ Har *10 kunda* to'lanadi\n🍽️ Bepul ovqat\n📈 Karyera o'sishi",
-    "📝 Ish shartnomasi": "📝 *ISH SHARTNOMASI*\n\n📋 Kerakli hujjatlar:\n• Pasport nusxasi\n• Mehnat daftarchasi\n• Diplom/attestat\n• 3x4 foto (2 dona)\n\n⏳ Probatsiya: 1 oy\n✅ Rasmiy mehnat shartnomasi\n✅ Ijtimoiy sug'urta\n\n📞 @Ottimo_hr",
-    "📊 Ish ma'lumotlari": "📊 *OTTIMO CAFE*\n\n☕ Toshkentdagi zamonaviy premium kafe!\n\n🌟 *Afzalliklar:*\n✅ Rasmiy ish joyi\n✅ Kuniga ~200,000 so'm\n✅ Har 10 kunda maosh\n✅ Bepul ovqat\n✅ Karyera o'sishi\n✅ Do'stona muhit\n✅ 25+ professional xodim\n\n💼 Bo'sh o'rinlar:\n• ☕ Barista\n• 💳 Kassir\n• 🍰 Konditer-sotuvchi\n\n📍 *3 ta Filial:*\n1️⃣ Nukus kino — Shifer, 71\n2️⃣ Parus ostida — Katartal, 60A/1\n3️⃣ Talant school — Buyuk Ipak Yo'li, 31\n\n📞 +998 99 060 33 53 | @Ottimo_hr",
-    "🤝 Xodimlar muammolari": "🤝 *XODIMLAR MUAMMOLARI*\n\n1️⃣ Hamkasbingiz bilan gaplashing\n2️⃣ Smena menejeriga\n3️⃣ HR: @Ottimo_hr\n\n⚠️ Ish joyida janjal — MAN!\n✅ Har murojaat ko'rib chiqiladi\n\n📞 +998 99 060 33 53",
-    "⚖️ Mehnat qonunlari": "⚖️ *MEHNAT QONUNLARI*\n\n✅ HUQUQLAR:\n• O'z vaqtida maosh\n• Yillik ta'til 15-21 kun\n• Kasallik varag'i\n• Ijtimoiy sug'urta\n\n⚠️ MAJBURIYATLAR:\n• O'z vaqtida kelish\n• Ish tartibiga rioya\n\n🚫 MAN:\n• Chekish • Alkogol • Mijozga qo'pollik\n\n📞 @Ottimo_hr",
-
+    "⏰ Ish vaqti": (
+        "⏰ ISH VAQTI\n\n"
+        "☀️ 1-smena: 07:30 — 16:30 (kunduzi)\n"
+        "🌙 2-smena: 16:00 — 24:00 (kechki payt)\n\n"
+        "📅 Smena jadvali har dushanba yangilanadi\n"
+        "Smena o'zgarishi kamida 1 kun oldin xabar beriladi\n"
+        "Smena almashtirish faqat menejer ruxsati bilan amalga oshiriladi\n\n"
+        "⚠️ Smenaga kechikish uchun jarima: 50 000 so'm\n"
+        "🍽 Har bir smenada xodimlarga bepul ovqat beriladi"
+    ),
+    "📊 Ish ma'lumotlari": (
+        "📊 OTTIMO CAFE HAQIDA\n\n"
+        "Ottimo — Toshkentdagi zamonaviy va qulay kafe. "
+        "Bizning maqsadimiz — mijozlarga yoqimli muhit va sifatli xizmat ko'rsatish.\n\n"
+        "✅ Rasmiy mehnat shartnomasi\n"
+        "✅ Maosh har 10 kunda to'lanadi\n"
+        "✅ Har smenada bepul ovqat\n"
+        "✅ Karyera o'sishi va rivojlanish imkoniyati\n"
+        "✅ Do'stona va professional jamoa (25+ xodim)\n"
+        "✅ Barqaror ish joyi\n"
+        "✅ Zamonaviy ish sharoiti\n\n"
+        "💼 Bo'sh ish o'rinlari:\n"
+        "☕ Barista\n"
+        "💳 Kassir\n"
+        "🍰 Konditer-sotuvchi\n\n"
+        "📍 Filiallar:\n"
+        "1. Nukus kinoteatri yonida — Shifer ko'chasi, 71\n"
+        "2. Parus ostida — Katartal ko'chasi, 60A/1\n"
+        "3. Talant International School ro'parasida — Buyuk Ipak Yo'li, 31\n\n"
+        "📞 +998 99 060 33 53 | @Ottimo_hr"
+    ),
+    "🤝 Xodimlar muammolari": (
+        "🤝 XODIMLAR MUAMMOLARINI HAL QILISH\n\n"
+        "Muammo yuzaga kelganda quyidagi tartibda harakat qiling:\n\n"
+        "1-qadam: Muammoni bevosita hamkasbingiz bilan muhokama qiling\n"
+        "2-qadam: Hal bo'lmasa, smena menejeriga murojaat qiling\n"
+        "3-qadam: Menejer yordam bera olmasa, HR ga yozing: @Ottimo_hr\n\n"
+        "⚠️ Ish joyida baland ovozda janjallashish mutlaqo man etiladi\n"
+        "⚠️ Muammolarni mijozlar oldida muhokama qilmang\n\n"
+        "✅ Har bir murojaat ko'rib chiqiladi\n"
+        "✅ Adolatli qaror qabul qilinadi\n"
+        "✅ Maxfiylik kafolatlanadi\n\n"
+        "📞 +998 99 060 33 53 | @Ottimo_hr"
+    ),
+    "⚖️ Mehnat qonunlari": (
+        "⚖️ MEHNAT QONUNLARI\n\n"
+        "O'zbekiston Mehnat kodeksi asosida:\n\n"
+        "✅ XODIM HUQUQLARI:\n"
+        "• Belgilangan maosh o'z vaqtida to'lanadi\n"
+        "• Yillik mehnat ta'tili (15-21 ish kuni)\n"
+        "• Kasallik varag'i to'liq hisobga olinadi\n"
+        "• Xavfsiz va qulay ish sharoiti\n"
+        "• Rasmiy mehnat shartnomasi tuziladi\n"
+        "• Ijtimoiy sug'urta qilinadi\n\n"
+        "⚠️ XODIM MAJBURIYATLARI:\n"
+        "• Ish tartibiga qat'iy rioya qilish\n"
+        "• Belgilangan vaqtda ish joyida bo'lish\n"
+        "• Kafe mulkiga ehtiyotkorlik bilan munosabatda bo'lish\n"
+        "• Maxfiy ma'lumotlarni oshkor etmaslik\n\n"
+        "🚫 MUTLAQO MAN ETILADI:\n"
+        "• Ish vaqtida chekish\n"
+        "• Spirtli ichimlik iste'mol qilish\n"
+        "• Mijozlarga qo'pollik qilish\n\n"
+        "📞 @Ottimo_hr"
+    ),
 }
 
 # ===================== MENYULAR =====================
 MAIN_MENU = ReplyKeyboardMarkup([
     ["👷 Ishchi qabul qilish", "❓ Savol va Javob", "⏰ Ish vaqti"],
-    ["💰 Oylik maosh", "📝 Ish shartnomasi", "📊 Ish ma'lumotlari"],
-    ["🤝 Xodimlar muammolari", "📍 Filiallar", "⚖️ Mehnat qonunlari"],
-    ["👨‍💼 Admin", "📞 Qo'llab-quvvatlash", "➕ Qo'shimcha savol"],
-    ["🆘 Yordam", "🗑️ Suhbatni tozalash"]
+    ["📊 Ish ma'lumotlari", "🤝 Xodimlar muammolari", "⚖️ Mehnat qonunlari"],
+    ["📍 Filiallar", "📞 Qo'llab-quvvatlash", "➕ Qo'shimcha savol"],
+    ["👨‍💼 Admin", "🆘 Yordam", "🗑️ Suhbatni tozalash"]
 ], resize_keyboard=True)
 
 ADMIN_MENU = ReplyKeyboardMarkup([
@@ -116,10 +172,10 @@ ADMIN_MENU = ReplyKeyboardMarkup([
 ], resize_keyboard=True)
 
 ADMIN_ADD_STEPS = [
-    ("ism", "👤 Xodim ismi:"),
+    ("ism",     "👤 Xodimning ismi:"),
     ("lavozim", "🎯 Lavozimi: (Barista / Kassir / Konditer)"),
     ("telefon", "📱 Telefon raqami:"),
-    ("smena", "⏰ Smenasi: (Ertalab / Kechqurun / Ikkalasi)"),
+    ("smena",   "⏰ Smenasi: (Kunduzi / Kechki payt / Ikkalasi)"),
 ]
 
 user_sessions = {}
@@ -130,34 +186,33 @@ admin_state = {}
 async def show_xodimlar(update, context):
     xodimlar = db_query("SELECT id, ism, lavozim, smena FROM xodimlar WHERE holat='aktiv'", fetchall=True)
     if not xodimlar:
-        await update.message.reply_text("📭 Xodimlar ro'yxati bo'sh.", reply_markup=ADMIN_MENU); return
-    text = "👥 *XODIMLAR RO'YXATI*\n\n"
+        await update.message.reply_text("Xodimlar ro'yxati bo'sh.", reply_markup=ADMIN_MENU); return
+    text = "XODIMLAR RO'YXATI\n\n"
     for x in xodimlar:
-        text += f"#{x[0]} *{x[1]}*\n🎯 {x[2]} | ⏰ {x[3]}\n\n"
-    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=ADMIN_MENU)
+        text += f"#{x[0]} {x[1]}\nLavozim: {x[2]} | Smena: {x[3]}\n\n"
+    await update.message.reply_text(text, reply_markup=ADMIN_MENU)
 
 async def show_statistika(update, context):
     jami = db_query("SELECT COUNT(*) FROM xodimlar WHERE holat='aktiv'", fetchone=True)[0]
     arizalar = db_query("SELECT COUNT(*) FROM arizalar WHERE holat='kutilmoqda'", fetchone=True)[0]
     kechikish = db_query("SELECT COUNT(*) FROM kechikishlar", fetchone=True)[0]
     await update.message.reply_text(
-        f"📊 *STATISTIKA*\n\n👥 Aktiv xodimlar: *{jami}*\n📋 Arizalar: *{arizalar}*\n⚠️ Kechikishlar: *{kechikish}*",
-        parse_mode='Markdown', reply_markup=ADMIN_MENU)
+        f"STATISTIKA\n\nAktiv xodimlar: {jami}\nKutilayotgan arizalar: {arizalar}\nJami kechikishlar: {kechikish}",
+        reply_markup=ADMIN_MENU)
 
 async def show_arizalar(update, context):
     arizalar = db_query("SELECT id, ism, telefon, lavozim, smena, sana FROM arizalar WHERE holat='kutilmoqda'", fetchall=True)
     if not arizalar:
-        await update.message.reply_text("📭 Ariza yo'q.", reply_markup=ADMIN_MENU); return
-    text = "📋 *ARIZALAR*\n\n"
+        await update.message.reply_text("Kutilayotgan ariza yo'q.", reply_markup=ADMIN_MENU); return
+    text = "ARIZALAR\n\n"
     for a in arizalar:
-        text += f"#{a[0]} *{a[1]}*\n📱 {a[2]} | 🎯 {a[3]} | ⏰ {a[4]}\n📅 {a[5]}\n\n"
-    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=ADMIN_MENU)
+        text += f"#{a[0]} {a[1]}\nTelefon: {a[2]} | Lavozim: {a[3]} | Smena: {a[4]}\nSana: {a[5]}\n\n"
+    await update.message.reply_text(text, reply_markup=ADMIN_MENU)
 
 async def start_add_xodim(update, context):
     user_id = update.effective_user.id
     admin_state[user_id] = {"action": "add_xodim", "step": 0, "data": {}}
-    await update.message.reply_text("➕ *YANGI XODIM*\n\n" + ADMIN_ADD_STEPS[0][1],
-                                     parse_mode='Markdown', reply_markup=ReplyKeyboardRemove())
+    await update.message.reply_text("YANGI XODIM QO'SHISH\n\n" + ADMIN_ADD_STEPS[0][1], reply_markup=ReplyKeyboardRemove())
 
 async def process_add_xodim(update, context):
     user_id = update.effective_user.id
@@ -173,15 +228,14 @@ async def process_add_xodim(update, context):
         db_query("INSERT INTO xodimlar (ism, lavozim, telefon, smena, qoshilgan_sana) VALUES (?,?,?,?,?)",
                  (data['ism'], data['lavozim'], data['telefon'], data['smena'], datetime.now().strftime("%d.%m.%Y")))
         admin_state.pop(user_id, None)
-        await update.message.reply_text(f"✅ *{data['ism']}* qo'shildi!", parse_mode='Markdown', reply_markup=ADMIN_MENU)
+        await update.message.reply_text(f"{data['ism']} xodimlar ro'yxatiga muvaffaqiyatli qo'shildi!", reply_markup=ADMIN_MENU)
 
 async def start_kechikish(update, context):
     xodimlar = db_query("SELECT id, ism FROM xodimlar WHERE holat='aktiv'", fetchall=True)
     if not xodimlar:
-        await update.message.reply_text("📭 Xodimlar yo'q.", reply_markup=ADMIN_MENU); return
+        await update.message.reply_text("Xodimlar yo'q.", reply_markup=ADMIN_MENU); return
     keyboard = [[InlineKeyboardButton(x[1], callback_data=f"kechik_{x[0]}")] for x in xodimlar]
-    await update.message.reply_text("⚠️ *Qaysi xodim kechikdi?*", parse_mode='Markdown',
-                                     reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text("Qaysi xodim kechikdi?", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def kechikish_callback(update, context):
     query = update.callback_query
@@ -190,22 +244,23 @@ async def kechikish_callback(update, context):
     xodim = db_query("SELECT ism FROM xodimlar WHERE id=?", (xodim_id,), fetchone=True)
     db_query("INSERT INTO kechikishlar (xodim_id, sana, minut) VALUES (?,?,?)",
              (xodim_id, datetime.now().strftime("%d.%m.%Y"), 15))
-    await query.edit_message_text(f"⚠️ *{xodim[0]}* kechikishi belgilandi!\n💸 50,000 so'm jarima", parse_mode='Markdown')
+    await query.edit_message_text(f"{xodim[0]} kechikishi belgilandi. Jarima: 50 000 so'm")
 
 # ===================== ANKETA =====================
 async def start_anketa(update, context):
     user_id = update.effective_user.id
     user_anketa[user_id] = {"step": 0, "data": {}}
     await update.message.reply_text(
-        f"📋 *OTTIMO CAFE — ARIZA ANKETA*\n\nJami {len(ANKETA_STEPS)} ta savol.\nBekor qilish: /bekor\n\n" + ANKETA_STEPS[0][1],
-        parse_mode='Markdown', reply_markup=ReplyKeyboardRemove())
+        f"OTTIMO CAFE — ISH UCHUN ARIZA\n\nJami {len(ANKETA_STEPS)} ta savol.\n"
+        "Bekor qilish uchun /bekor deb yozing.\n\n" + ANKETA_STEPS[0][1],
+        reply_markup=ReplyKeyboardRemove())
 
 async def process_anketa(update, context):
     user_id = update.effective_user.id
     text = update.message.text
     if text == "/bekor":
         user_anketa.pop(user_id, None)
-        await update.message.reply_text("❌ Bekor qilindi.", reply_markup=MAIN_MENU); return
+        await update.message.reply_text("Ariza bekor qilindi.", reply_markup=MAIN_MENU); return
 
     step_data = user_anketa[user_id]
     current_step = step_data["step"]
@@ -217,9 +272,9 @@ async def process_anketa(update, context):
         step_data["step"] = next_step
         next_key, next_question = ANKETA_STEPS[next_step]
         if next_key == "smena":
-            await update.message.reply_text(next_question, parse_mode='Markdown', reply_markup=SMENA_MENU)
+            await update.message.reply_text(next_question, reply_markup=SMENA_MENU)
         else:
-            await update.message.reply_text(next_question, parse_mode='Markdown', reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text(next_question, reply_markup=ReplyKeyboardRemove())
     else:
         data = step_data["data"]
         db_query("INSERT INTO arizalar (ism, telefon, lavozim, smena, sana) VALUES (?,?,?,?,?)",
@@ -227,81 +282,85 @@ async def process_anketa(update, context):
                   data.get('smena'), datetime.now().strftime("%d.%m.%Y")))
 
         summary = (
-            "✅ *ANKETANGIZ TAYYOR! Tekshirib ko'ring:*\n\n"
-            f"👤 *Ism:* {data.get('ism_familiya_sharif')}\n"
-            f"📅 *Tug'ilgan sana:* {data.get('tug_sana')}\n"
-            f"🌍 *Millat:* {data.get('millat')}\n"
-            f"🗺 *Tug'ilgan joy:* {data.get('tug_joy')}\n"
-            f"🏠 *Yashash joyi:* {data.get('yashash_joy')} ({data.get('turar_joy')})\n"
-            f"📱 *Telefon:* {data.get('telefon')}\n"
-            f"🎓 *Ta'lim:* {data.get('talim')}\n"
-            f"🏫 *O'quv yurti:* {data.get('oquv_yurti')}\n"
-            f"💼 *Ish tajribasi:* {data.get('oldingi_ish')}\n"
-            f"✈️ *Chet safari:* {data.get('chet_safari')}\n"
-            f"💑 *Oilaviy holat:* {data.get('oilaviy_holat')}\n"
-            f"👨‍👩‍👧 *Oila a'zosi:* {data.get('oila_azosi')}\n"
-            f"⚖️ *Sudlanganmi:* {data.get('sudlanganmi')}\n"
-            f"🚗 *Avtomobil:* {data.get('avtomobil')}\n"
-            f"🪪 *Haydovchilik:* {data.get('haydovchilik')}\n"
-            f"🗣 *Tillar:* O'zbek: {data.get('uzbek_tili')} | Rus: {data.get('rus_tili')} | Ingliz: {data.get('ingliz_tili')} | Boshqa: {data.get('boshqa_til')}\n"
-            f"⭐ *Qobiliyat:* {data.get('qobiliyat')}\n"
-            f"🎯 *Bo'sh vaqt:* {data.get('bosh_vaqt')}\n"
-            f"💻 *Kompyuter:* {data.get('kompyuter')}\n"
-            f"📢 *Qayerdan bildingiz:* {data.get('qayerdan_bildingiz')}\n"
-            f"🤝 *Kafil:* {data.get('kafil')}\n"
-            f"📄 *Tavsiya:* {data.get('tavsiya')}\n"
-            f"🔍 *Surishtirish rozi:* {data.get('surushtirishga_rozi')}\n"
-            f"💵 *Oldingi maosh:* {data.get('oldingi_maosh')}\n"
-            f"💰 *Kutilayotgan maosh:* {data.get('kutilayotgan_maosh')}\n"
-            f"📆 *Ishlash muddati:* {data.get('ishlash_muddati')}\n"
-            f"🕐 *Qolib ishlash:* {data.get('qolib_ishlash')}\n"
-            f"⏰ *Smena:* {data.get('smena')}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
+            "ANKETANGIZ TAYYOR! Iltimos, tekshirib ko'ring:\n\n"
+            f"Ism, Familiya, Sharif: {data.get('ism_familiya_sharif')}\n"
+            f"Tug'ilgan sana: {data.get('tug_sana')}\n"
+            f"Millat: {data.get('millat')}\n"
+            f"Tug'ilgan joy: {data.get('tug_joy')}\n"
+            f"Yashash manzili: {data.get('yashash_joy')} ({data.get('turar_joy')})\n"
+            f"Telefon: {data.get('telefon')}\n"
+            f"Ta'lim: {data.get('talim')}\n"
+            f"O'quv yurti: {data.get('oquv_yurti')}\n"
+            f"Ish tajribasi: {data.get('oldingi_ish')}\n"
+            f"Chet el safari: {data.get('chet_safari')}\n"
+            f"Oilaviy holat: {data.get('oilaviy_holat')}\n"
+            f"Oila a'zolari: {data.get('oila_azosi')}\n"
+            f"Sudlanganmi: {data.get('sudlanganmi')}\n"
+            f"Avtomobil: {data.get('avtomobil')}\n"
+            f"Haydovchilik guvohnomasi: {data.get('haydovchilik')}\n"
+            f"O'zbek tili: {data.get('uzbek_tili')}\n"
+            f"Rus tili: {data.get('rus_tili')}\n"
+            f"Ingliz tili: {data.get('ingliz_tili')}\n"
+            f"Boshqa tillar: {data.get('boshqa_til')}\n"
+            f"Qobiliyatlar: {data.get('qobiliyat')}\n"
+            f"Bo'sh vaqt: {data.get('bosh_vaqt')}\n"
+            f"Kompyuter: {data.get('kompyuter')}\n"
+            f"Qayerdan bildingiz: {data.get('qayerdan_bildingiz')}\n"
+            f"Kafil shaxs: {data.get('kafil')}\n"
+            f"Tavsiya xati: {data.get('tavsiya')}\n"
+            f"Surishtirish roziligi: {data.get('surushtirishga_rozi')}\n"
+            f"Oldingi maosh: {data.get('oldingi_maosh')}\n"
+            f"Kutilayotgan maosh: {data.get('kutilayotgan_maosh')}\n"
+            f"Ishlash muddati: {data.get('ishlash_muddati')}\n"
+            f"Ish vaqti: {data.get('smena')}\n\n"
             "Tasdiqlaysizmi?"
         )
         confirm_keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton("✅ Tasdiqlash", callback_data="anketa_confirm"),
             InlineKeyboardButton("❌ Bekor qilish", callback_data="anketa_cancel")
         ]])
-        await update.message.reply_text(summary, parse_mode='Markdown', reply_markup=confirm_keyboard)
+        await update.message.reply_text(summary, reply_markup=confirm_keyboard)
 
 async def anketa_callback(update, context):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
+
     if query.data == "anketa_confirm":
         data = user_anketa.get(user_id, {}).get("data", {})
         username = query.from_user.username or "username_yoq"
+
         msg = (
-            "🔔 YANGI ARIZA KELDI!\n\n"
-            f"👤 {data.get('ism_familiya_sharif')}\n"
-            f"📱 {data.get('telefon')}\n"
-            f"📅 {data.get('tug_sana')} | 🌍 {data.get('millat')}\n"
-            f"🗺 {data.get('tug_joy')}\n"
-            f"🏠 {data.get('yashash_joy')} ({data.get('turar_joy')})\n"
-            f"🎓 {data.get('talim')}\n"
-            f"🏫 {data.get('oquv_yurti')}\n"
-            f"💼 {data.get('oldingi_ish')}\n"
-            f"✈️ {data.get('chet_safari')}\n"
-            f"💑 {data.get('oilaviy_holat')} | 👨‍👩‍👧 {data.get('oila_azosi')}\n"
-            f"⚖️ Sudlanganmi: {data.get('sudlanganmi')}\n"
-            f"🚗 {data.get('avtomobil')} | 🪪 {data.get('haydovchilik')}\n"
-            f"🗣 O'zbek: {data.get('uzbek_tili')} | Rus: {data.get('rus_tili')} | Ingliz: {data.get('ingliz_tili')}\n"
-            f"🗣 Boshqa til: {data.get('boshqa_til')}\n"
-            f"⭐ {data.get('qobiliyat')}\n"
-            f"🎯 {data.get('bosh_vaqt')}\n"
-            f"💻 {data.get('kompyuter')}\n"
-            f"📢 {data.get('qayerdan_bildingiz')}\n"
-            f"🤝 Kafil: {data.get('kafil')}\n"
-            f"📄 Tavsiya: {data.get('tavsiya')}\n"
-            f"🔍 Surishtirish: {data.get('surushtirishga_rozi')}\n"
-            f"💵 Oldingi maosh: {data.get('oldingi_maosh')}\n"
-            f"💰 Kutilayotgan: {data.get('kutilayotgan_maosh')}\n"
-            f"📆 Muddati: {data.get('ishlash_muddati')}\n"
-            f"🕐 Qolib ishlash: {data.get('qolib_ishlash')}\n"
-            f"⏰ Smena: {data.get('smena')}\n\n"
-            f"📲 @{username}"
+            "YANGI ARIZA KELDI!\n\n"
+            f"Ism: {data.get('ism_familiya_sharif')}\n"
+            f"Telefon: {data.get('telefon')}\n"
+            f"Tug'ilgan sana: {data.get('tug_sana')} | Millat: {data.get('millat')}\n"
+            f"Tug'ilgan joy: {data.get('tug_joy')}\n"
+            f"Yashash manzili: {data.get('yashash_joy')} ({data.get('turar_joy')})\n"
+            f"Ta'lim: {data.get('talim')}\n"
+            f"O'quv yurti: {data.get('oquv_yurti')}\n"
+            f"Ish tajribasi: {data.get('oldingi_ish')}\n"
+            f"Chet el safari: {data.get('chet_safari')}\n"
+            f"Oilaviy holat: {data.get('oilaviy_holat')}\n"
+            f"Oila a'zolari: {data.get('oila_azosi')}\n"
+            f"Sudlanganmi: {data.get('sudlanganmi')}\n"
+            f"Avtomobil: {data.get('avtomobil')} | Haydovchilik: {data.get('haydovchilik')}\n"
+            f"O'zbek tili: {data.get('uzbek_tili')} | Rus tili: {data.get('rus_tili')} | Ingliz tili: {data.get('ingliz_tili')}\n"
+            f"Boshqa tillar: {data.get('boshqa_til')}\n"
+            f"Qobiliyatlar: {data.get('qobiliyat')}\n"
+            f"Bo'sh vaqt: {data.get('bosh_vaqt')}\n"
+            f"Kompyuter: {data.get('kompyuter')}\n"
+            f"Qayerdan bildingiz: {data.get('qayerdan_bildingiz')}\n"
+            f"Kafil shaxs: {data.get('kafil')}\n"
+            f"Tavsiya xati: {data.get('tavsiya')}\n"
+            f"Surishtirish roziligi: {data.get('surushtirishga_rozi')}\n"
+            f"Oldingi maosh: {data.get('oldingi_maosh')}\n"
+            f"Kutilayotgan maosh: {data.get('kutilayotgan_maosh')}\n"
+            f"Ishlash muddati: {data.get('ishlash_muddati')}\n"
+            f"Ish vaqti: {data.get('smena')}\n\n"
+            f"Telegram: @{username}"
         )
+
         try:
             await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg)
             logger.info(f"Admin ga xabar yuborildi: {ADMIN_CHAT_ID}")
@@ -311,47 +370,56 @@ async def anketa_callback(update, context):
                 await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg)
             except Exception as e2:
                 logger.error(f"Backup ham xato: {e2}")
+
         user_anketa.pop(user_id, None)
-        # Eski xabarni o'chirish (tasdiqlash tugmalari bilan xabar)
         try:
             await query.message.delete()
         except Exception:
             pass
-        # Yangi rahmat xabari
+
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "🙏 *Anketani to'ldirganingiz uchun katta rahmat!*\n\n"
-                "✅ Ma'lumotlaringiz muvaffaqiyatli saqlandi!\n\n"
-                "🕐 Ko'rib chiqish muddati: 1-3 ish kuni\n"
-                "📱 @Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
-                "Omad tilaymiz! 🌟\n\n"
-                "📲 Murojaat uchun: https://t.me/ottimo_uz"
+                "Anketani to'ldirganingiz uchun katta rahmat!\n\n"
+                "Ma'lumotlaringiz muvaffaqiyatli saqlandi.\n\n"
+                "Ko'rib chiqish muddati: 1-3 ish kuni\n"
+                "@Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
+                "Omad tilaymiz!\n\n"
+                "Murojaat uchun: https://t.me/ottimo_uz"
             ),
-            parse_mode='Markdown',
-            disable_web_page_preview=True,
             reply_markup=MAIN_MENU
         )
+
     elif query.data == "anketa_cancel":
         user_anketa.pop(user_id, None)
-        await query.edit_message_text("❌ Anketa bekor qilindi.")
+        await query.edit_message_text("Ariza bekor qilindi.")
         await context.bot.send_message(chat_id=user_id, text="Bosh menyuga qaytdingiz.", reply_markup=MAIN_MENU)
 
 # ===================== ASOSIY =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name or "Foydalanuvchi"
     await update.message.reply_text(
-        f"👋 Salom, *{user_name}*!\n\n🏢 *OTTIMO CAFE HR AGENTIGA XUSH KELIBSIZ!*\n\nQuyidagi bo'limlardan birini tanlang 👇",
-        parse_mode='Markdown', reply_markup=MAIN_MENU)
+        f"Salom, {user_name}!\n\nOttimo Cafe HR botiga xush kelibsiz!\n\nQuyidagi bo'limlardan birini tanlang:",
+        reply_markup=MAIN_MENU)
 
 def ask_gemini(user_id, user_text):
     history = user_sessions.get(user_id, [])
     history_text = ""
     if history:
         history_text = "\n\n" + "\n".join([f"Foydalanuvchi: {h['user']}\nAgent: {h['agent']}" for h in history[-5:]])
-    full_prompt = "Sen Ottimo Cafe HR agentisan. Faqat O'zbek tilida javob ber." + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
+    system = (
+        "Sen Ottimo Cafe uchun HR agentisan. Faqat o'zbek tilida javob ber.\n"
+        "Ottimo Cafe — Toshkentdagi zamonaviy kafe. "
+        "Bo'sh o'rinlar: Barista, Kassir, Konditer. "
+        "Ish vaqti: kunduzi 07:30-16:30, kechki payt 16:00-24:00. "
+        "Filiallar: Shifer ko'chasi 71, Katartal 60A/1, Buyuk Ipak Yo'li 31. "
+        "Bog'lanish: +998 99 060 33 53, @Ottimo_hr. "
+        "Har doim do'stona va aniq javob ber."
+    )
+    full_prompt = system + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    r = requests.post(url, json={"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1000}}, timeout=30)
+    r = requests.post(url, json={"contents": [{"parts": [{"text": full_prompt}]}],
+                                  "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1000}}, timeout=30)
     r.raise_for_status()
     return r.json()["candidates"][0]["content"]["parts"][0]["text"]
 
@@ -377,41 +445,43 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Bosh menyu:", reply_markup=MAIN_MENU); return
     if user_text == "🗑️ Suhbatni tozalash":
         user_sessions[user_id] = []
-        await update.message.reply_text("✅ Tozalandi!", reply_markup=MAIN_MENU); return
+        await update.message.reply_text("Suhbat tozalandi!", reply_markup=MAIN_MENU); return
     if user_text == "🆘 Yordam":
-        await update.message.reply_text("Menyudan tanlang yoki savol yozing!", reply_markup=MAIN_MENU); return
+        await update.message.reply_text(
+            "Menyudan bo'lim tanlang yoki istalgan savolingizni yozing, javob beramiz!",
+            reply_markup=MAIN_MENU); return
     if user_text == "👨‍💼 Admin":
         await update.message.reply_text(
-            "👨‍💼 *ADMIN*\n\n📱 @Ottimo_hr\n📞 +998 99 060 33 53\n\n👉 [Admin ga yozish](https://t.me/Ottimo_hr)",
-            parse_mode='Markdown', reply_markup=MAIN_MENU, disable_web_page_preview=True); return
+            "Admin bilan bog'lanish:\n\nTelegram: @Ottimo_hr\nTelefon: +998 99 060 33 53\n\nIsh vaqti: 09:00 — 18:00",
+            reply_markup=MAIN_MENU); return
     if user_text == "📍 Filiallar":
         await update.message.reply_text(
-            "📍 *OTTIMO CAFE FILIALLARI*\n\n"
-            "1️⃣ *Nukus kinoteatri yonida*\n📌 Toshkent, Shifer ko'chasi, 71\n\n"
-            "2️⃣ *Parus ostida*\n📌 Toshkent, Katartal ko'chasi, 60A/1\n\n"
-            "3️⃣ *Talant International School ro'parasida*\n📌 Toshkent, Mirzo Ulug'bek, Buyuk Ipak Yo'li, 31\n\n"
-            "📞 +998 99 060 33 53 | @Ottimo_hr",
-            parse_mode='Markdown', reply_markup=MAIN_MENU); return
+            "OTTIMO CAFE FILIALLARI\n\n"
+            "1. Nukus kinoteatri yonida\n"
+            "   Toshkent, Shifer ko'chasi, 71\n\n"
+            "2. Parus ostida\n"
+            "   Toshkent, Katartal ko'chasi, 60A/1\n\n"
+            "3. Talant International School ro'parasida\n"
+            "   Toshkent, Mirzo Ulug'bek tumani, Buyuk Ipak Yo'li, 31\n\n"
+            "Telefon: +998 99 060 33 53\n"
+            "Telegram: @Ottimo_hr",
+            reply_markup=MAIN_MENU); return
     if user_text == "📞 Qo'llab-quvvatlash":
         await update.message.reply_text(
-            "📞 *Qo'llab-quvvatlash*\n\n📱 +998 99 060 33 53\n💬 @Ottimo_hr",
-            parse_mode='Markdown', reply_markup=MAIN_MENU); return
+            "Qo'llab-quvvatlash xizmati:\n\nTelefon: +998 99 060 33 53\nTelegram: @Ottimo_hr",
+            reply_markup=MAIN_MENU); return
     if user_text == "➕ Qo'shimcha savol":
-        await update.message.reply_text("➕ Savolingizni yozing! 👇", reply_markup=MAIN_MENU); return
+        await update.message.reply_text(
+            "Savolingizni yozing, javob beramiz!", reply_markup=MAIN_MENU); return
     if user_text == "👷 Ishchi qabul qilish":
         await start_anketa(update, context); return
-
-    # Savol va Javob — AI javob beradi
     if user_text == "❓ Savol va Javob":
         await update.message.reply_text(
-            "❓ *SAVOL VA JAVOB*\n\n"
-            "Ottimo Cafe haqida istalgan savolingizni yozing — AI avtomatik javob beradi! 👇\n\n"
-            "_Masalan: Ish vaqti qanday? Maosh qancha? Qanday hujjatlar kerak?_",
-            parse_mode='Markdown', reply_markup=MAIN_MENU)
-        return
-
+            "Ottimo Cafe haqida istalgan savolingizni yozing — javob beramiz!\n\n"
+            "Masalan: Ish vaqti qanday? Maosh qancha? Qanday hujjatlar kerak?",
+            reply_markup=MAIN_MENU); return
     if user_text in STATIC_RESPONSES:
-        await update.message.reply_text(STATIC_RESPONSES[user_text], parse_mode='Markdown', reply_markup=MAIN_MENU); return
+        await update.message.reply_text(STATIC_RESPONSES[user_text], reply_markup=MAIN_MENU); return
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     if user_id not in user_sessions:
@@ -422,7 +492,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(reply, reply_markup=MAIN_MENU)
     except Exception as e:
         logger.error(f"Xato: {e}")
-        await update.message.reply_text("⚠️ Xatolik. @Ottimo_hr ga murojaat qiling.", reply_markup=MAIN_MENU)
+        await update.message.reply_text(
+            "Hozirda texnik nosozlik yuz berdi. Iltimos, @Ottimo_hr ga murojaat qiling.",
+            reply_markup=MAIN_MENU)
 
 def main():
     init_db()
