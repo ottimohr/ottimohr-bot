@@ -304,8 +304,14 @@ async def anketa_callback(update, context):
         )
         try:
             await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg, parse_mode='Markdown')
+            logger.info(f"Admin ga xabar yuborildi: {ADMIN_CHAT_ID}")
         except Exception as e:
-            logger.error(f"Admin ga xato: {e}")
+            logger.error(f"Admin ga xabar yuborishda xato: {e}")
+            # Backup — username orqali yuborish
+            try:
+                await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg, parse_mode='Markdown')
+            except Exception as e2:
+                logger.error(f"Backup ham xato: {e2}")
         user_anketa.pop(user_id, None)
         # Eski xabarni o'chirish (tasdiqlash tugmalari bilan xabar)
         try:
@@ -319,11 +325,11 @@ async def anketa_callback(update, context):
                 "🙏 *Anketani to'ldirganingiz uchun katta rahmat!*\n\n"
                 "✅ Ma'lumotlaringiz muvaffaqiyatli saqlandi!\n\n"
                 "🕐 Ko'rib chiqish muddati: 1-3 ish kuni\n"
-                "📱 @Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
-                "Omad tilaymiz! 🌟\n\n"
+                "📱 @Ottimo\_hr tez orada siz bilan bog'lanadi\n\n"
+                "Omad tilaymiz\! 🌟\n\n"
                 "📲 Murojaat uchun: [Ottimo HR](https://t.me/ottimo_uz)"
             ),
-            parse_mode='Markdown',
+            parse_mode='MarkdownV2',
             disable_web_page_preview=True,
             reply_markup=MAIN_MENU
         )
@@ -430,4 +436,4 @@ def main():
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
-    main()
+    main()А
