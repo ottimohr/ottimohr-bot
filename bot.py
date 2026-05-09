@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 ADMIN_USERNAME = "mr_jalilov7"
+ADMIN_CHAT_ID = 8134379339
 
 # ===================== DATABASE =====================
 def init_db():
@@ -302,14 +303,20 @@ async def anketa_callback(update, context):
             f"📲 @{username}"
         )
         try:
-            await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg, parse_mode='Markdown')
+            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg, parse_mode='Markdown')
         except Exception as e:
             logger.error(f"Admin ga xato: {e}")
         user_anketa.pop(user_id, None)
         await query.edit_message_text(
             "✅ *Anketangiz yuborildi!*\n\n🕐 Ko'rib chiqish: 1-3 ish kuni\n📱 @Ottimo_hr bog'lanadi\n\nRahmat! 🙏",
             parse_mode='Markdown')
-        await context.bot.send_message(chat_id=user_id, text="Bosh menyu:", reply_markup=MAIN_MENU)
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="📲 *Qo'shimcha savol yoki murojaat uchun:*\n\n👉 [Ottimo HR ga yozish](https://t.me/Ottimo_hr)",
+            parse_mode='Markdown',
+            disable_web_page_preview=True,
+            reply_markup=MAIN_MENU
+        )
     elif query.data == "anketa_cancel":
         user_anketa.pop(user_id, None)
         await query.edit_message_text("❌ Anketa bekor qilindi.")
