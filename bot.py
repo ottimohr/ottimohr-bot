@@ -321,7 +321,7 @@ async def anketa_callback(update, context):
                 "🕐 Ko'rib chiqish muddati: 1-3 ish kuni\n"
                 "📱 @Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
                 "Omad tilaymiz! 🌟\n\n"
-                "📲 Murojaat uchun: [Ottimo HR](https://t.me/Ottimo_hr)"
+                "📲 Murojaat uchun: [Ottimo HR](https://t.me/ottimo_uz)"
             ),
             parse_mode='Markdown',
             disable_web_page_preview=True,
