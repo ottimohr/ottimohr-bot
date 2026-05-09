@@ -404,18 +404,49 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def ask_gemini(user_id, user_text):
     history = user_sessions.get(user_id, [])
+    # Ottimo mode tekshirish
+    ottimo_mode = any(h.get("user") == "__ottimo_mode__" for h in history)
+
     history_text = ""
-    if history:
-        history_text = "\n\n" + "\n".join([f"Foydalanuvchi: {h['user']}\nAgent: {h['agent']}" for h in history[-5:]])
-    system = (
-        "Sen Ottimo Cafe uchun HR agentisan. Faqat o'zbek tilida javob ber.\n"
-        "Ottimo Cafe — Toshkentdagi zamonaviy kafe. "
-        "Bo'sh o'rinlar: Barista, Kassir, Konditer. "
-        "Ish vaqti: kunduzi 07:30-16:30, kechki payt 16:00-24:00. "
-        "Filiallar: Shifer ko'chasi 71, Katartal 60A/1, Buyuk Ipak Yo'li 31. "
-        "Bog'lanish: +998 99 060 33 53, @Ottimo_hr. "
-        "Har doim do'stona va aniq javob ber."
-    )
+    clean_history = [h for h in history if h.get("user") != "__ottimo_mode__"]
+    if clean_history:
+        history_text = "\n\n" + "\n".join([
+            f"Foydalanuvchi: {h['user']}\nAgent: {h['agent']}"
+            for h in clean_history[-5:]
+        ])
+
+    if ottimo_mode:
+        system = (
+            "Sen Ottimo Cafe uchun maxsus HR yordamchisisisan.\n"
+            "MUHIM QOIDA: Faqat Ottimo Cafe haqidagi savollarga javob ber.\n"
+            "Agar savol Ottimo Cafe bilan bog'liq bo'lmasa, quyidagicha javob ber:\n"
+            "'Kechirasiz, men faqat Ottimo Cafe haqidagi savollarga javob bera olaman. "
+            "Ottimo Cafe haqida savol bering!'\n\n"
+            "Ottimo Cafe haqida to'liq ma'lumot:\n"
+            "- Zamonaviy kafe, Toshkentda 3 ta filiali bor\n"
+            "- Filiallar: 1) Nukus kinoteatri yonida, Shifer ko'chasi 71; "
+            "2) Parus ostida, Katartal ko'chasi 60A/1; "
+            "3) Talant International School ro'parasida, Buyuk Ipak Yo'li 31\n"
+            "- Bo'sh ish o'rinlari: Barista, Kassir, Konditer-sotuvchi\n"
+            "- Ish vaqti: kunduzi 07:30-16:30, kechki payt 16:00-24:00\n"
+            "- Yosh talabi: 20-35 yosh\n"
+            "- Rus tilini bilish shart\n"
+            "- Chekmaydigan va spirtli ichimlik iste'mol qilmaydigan bo'lishi shart\n"
+            "- Probatsiya muddati: 1 oy\n"
+            "- Maosh har 10 kunda to'lanadi\n"
+            "- Har smenada bepul ovqat beriladi\n"
+            "- Bog'lanish: +998 99 060 33 53, @Ottimo_hr\n\n"
+            "Faqat o'zbek tilida, do'stona va ijodiy tarzda javob ber."
+        )
+    else:
+        system = (
+            "Sen Ottimo Cafe uchun HR agentisan. Faqat o'zbek tilida javob ber.\n"
+            "Ottimo Cafe — Toshkentdagi zamonaviy kafe. "
+            "Filiallar: Shifer 71, Katartal 60A/1, Buyuk Ipak Yo'li 31. "
+            "Bog'lanish: +998 99 060 33 53, @Ottimo_hr. "
+            "Har doim do'stona va aniq javob ber."
+        )
+
     full_prompt = system + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     r = requests.post(url, json={"contents": [{"parts": [{"text": full_prompt}]}],
@@ -476,9 +507,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_text == "👷 Ishchi qabul qilish":
         await start_anketa(update, context); return
     if user_text == "❓ Savol va Javob":
+        user_sessions[user_id] = [{"user": "__ottimo_mode__", "agent": "__ottimo_mode__"}]
         await update.message.reply_text(
-            "Ottimo Cafe haqida istalgan savolingizni yozing — javob beramiz!\n\n"
-            "Masalan: Ish vaqti qanday? Maosh qancha? Qanday hujjatlar kerak?",
+            "Ottimo Cafe haqida istalgan savolingizni yozing!\n\n"
+            "Masalan:\n"
+            "— Filiallar qayerda joylashgan?\n"
+            "— Ish vaqti qanday?\n"
+            "— Qanday hujjatlar kerak?\n"
+            "— Barista bo'lib ishlash uchun nima qilish kerak?",
             reply_markup=MAIN_MENU); return
     if user_text in STATIC_RESPONSES:
         await update.message.reply_text(STATIC_RESPONSES[user_text], reply_markup=MAIN_MENU); return
