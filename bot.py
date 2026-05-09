@@ -97,7 +97,7 @@ STATIC_RESPONSES = {
     "📊 Ish ma'lumotlari": "📊 *OTTIMO CAFE*\n\n☕ Toshkentdagi zamonaviy premium kafe!\n\n🌟 *Afzalliklar:*\n✅ Rasmiy ish joyi\n✅ Kuniga ~200,000 so'm\n✅ Har 10 kunda maosh\n✅ Bepul ovqat\n✅ Karyera o'sishi\n✅ Do'stona muhit\n✅ 25+ professional xodim\n\n💼 Bo'sh o'rinlar:\n• ☕ Barista\n• 💳 Kassir\n• 🍰 Konditer-sotuvchi\n\n📍 *3 ta Filial:*\n1️⃣ Nukus kino — Shifer, 71\n2️⃣ Parus ostida — Katartal, 60A/1\n3️⃣ Talant school — Buyuk Ipak Yo'li, 31\n\n📞 +998 99 060 33 53 | @Ottimo_hr",
     "🤝 Xodimlar muammolari": "🤝 *XODIMLAR MUAMMOLARI*\n\n1️⃣ Hamkasbingiz bilan gaplashing\n2️⃣ Smena menejeriga\n3️⃣ HR: @Ottimo_hr\n\n⚠️ Ish joyida janjal — MAN!\n✅ Har murojaat ko'rib chiqiladi\n\n📞 +998 99 060 33 53",
     "⚖️ Mehnat qonunlari": "⚖️ *MEHNAT QONUNLARI*\n\n✅ HUQUQLAR:\n• O'z vaqtida maosh\n• Yillik ta'til 15-21 kun\n• Kasallik varag'i\n• Ijtimoiy sug'urta\n\n⚠️ MAJBURIYATLAR:\n• O'z vaqtida kelish\n• Ish tartibiga rioya\n\n🚫 MAN:\n• Chekish • Alkogol • Mijozga qo'pollik\n\n📞 @Ottimo_hr",
-    "❓ Savol va Javob": "❓ *FAQ*\n\n❓ Ish o'rinlari?\n✅ Barista, Kassir, Konditer\n\n❓ Yosh?\n✅ 20-35\n\n❓ Kunlik daromad?\n✅ ~200,000 so'm\n\n❓ Maosh qachon?\n✅ Har 10 kunda\n\n❓ Ish vaqti?\n✅ 07:30-16:30 / 16:00-24:00\n\n❓ Probatsiya?\n✅ 1 oy\n\n❓ Ovqat?\n✅ Bepul!\n\n❓ Murojaat?\n✅ @Ottimo_hr | +998 99 060 33 53",
+
 }
 
 # ===================== MENYULAR =====================
@@ -395,6 +395,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("➕ Savolingizni yozing! 👇", reply_markup=MAIN_MENU); return
     if user_text == "👷 Ishchi qabul qilish":
         await start_anketa(update, context); return
+
+    # Savol va Javob — AI javob beradi
+    if user_text == "❓ Savol va Javob":
+        await update.message.reply_text(
+            "❓ *SAVOL VA JAVOB*\n\n"
+            "Ottimo Cafe haqida istalgan savolingizni yozing — AI avtomatik javob beradi! 👇\n\n"
+            "_Masalan: Ish vaqti qanday? Maosh qancha? Qanday hujjatlar kerak?_",
+            parse_mode='Markdown', reply_markup=MAIN_MENU)
+        return
+
     if user_text in STATIC_RESPONSES:
         await update.message.reply_text(STATIC_RESPONSES[user_text], parse_mode='Markdown', reply_markup=MAIN_MENU); return
 
