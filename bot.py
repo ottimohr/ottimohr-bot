@@ -273,8 +273,8 @@ async def anketa_callback(update, context):
         data = user_anketa.get(user_id, {}).get("data", {})
         username = query.from_user.username or "username_yoq"
         msg = (
-            "🔔 *YANGI ARIZA KELDI!*\n\n"
-            f"👤 *{data.get('ism_familiya_sharif')}*\n"
+            "🔔 YANGI ARIZA KELDI!\n\n"
+            f"👤 {data.get('ism_familiya_sharif')}\n"
             f"📱 {data.get('telefon')}\n"
             f"📅 {data.get('tug_sana')} | 🌍 {data.get('millat')}\n"
             f"🗺 {data.get('tug_joy')}\n"
@@ -289,7 +289,7 @@ async def anketa_callback(update, context):
             f"🗣 O'zbek: {data.get('uzbek_tili')} | Rus: {data.get('rus_tili')} | Ingliz: {data.get('ingliz_tili')}\n"
             f"🗣 Boshqa til: {data.get('boshqa_til')}\n"
             f"⭐ {data.get('qobiliyat')}\n"
-            f"🎯 Bo'sh vaqt: {data.get('bosh_vaqt')}\n"
+            f"🎯 {data.get('bosh_vaqt')}\n"
             f"💻 {data.get('kompyuter')}\n"
             f"📢 {data.get('qayerdan_bildingiz')}\n"
             f"🤝 Kafil: {data.get('kafil')}\n"
@@ -299,17 +299,16 @@ async def anketa_callback(update, context):
             f"💰 Kutilayotgan: {data.get('kutilayotgan_maosh')}\n"
             f"📆 Muddati: {data.get('ishlash_muddati')}\n"
             f"🕐 Qolib ishlash: {data.get('qolib_ishlash')}\n"
-            f"⏰ Smena: *{data.get('smena')}*\n\n"
+            f"⏰ Smena: {data.get('smena')}\n\n"
             f"📲 @{username}"
         )
         try:
-            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg, parse_mode='Markdown')
+            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg)
             logger.info(f"Admin ga xabar yuborildi: {ADMIN_CHAT_ID}")
         except Exception as e:
             logger.error(f"Admin ga xabar yuborishda xato: {e}")
-            # Backup — username orqali yuborish
             try:
-                await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg, parse_mode='Markdown')
+                await context.bot.send_message(chat_id=f"@{ADMIN_USERNAME}", text=msg)
             except Exception as e2:
                 logger.error(f"Backup ham xato: {e2}")
         user_anketa.pop(user_id, None)
