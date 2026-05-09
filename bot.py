@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-ADMIN_USERNAME = "mr_jalilov7"
+ADMIN_USERNAME = "@Ottimo_hr"
 ADMIN_CHAT_ID = 8134379339
 
 # ===================== DATABASE =====================
@@ -74,7 +74,7 @@ ANKETA_STEPS = [
     ("kompyuter",             "💻 *23/32* — Kompyuterda erkin ishlaysizmi?\n_(Ha / Yo'q / O'rta)_"),
     ("qayerdan_bildingiz",    "📢 *24/32* — Kompaniyamiz haqida qayerdan bildingiz?\n_(Do'stim / Instagram / OLX...)_"),
     ("kafil",                 "🤝 *25/32* — Ishlashingizga kafolat bera oladigan shaxs:\n_(Ismi, aloqasi, ish joyi, telefon. Yo'q — Yo'q)_"),
-    ("tavsiya",               "📄 *26/32* — Oxirgi ish joyingizdan tavsiya xati bera oladi:\n_(Ismi, lavozimi, telefon. Yo'q — Yo'q)_"),
+    ("tavsiya",               "📄 *26/32* — Oxirgi ish joyingizdan tavsiya xati bera oladimi?\n_(Ha — ismi, lavozimi, telefon. Yo'q — Yo'q)_"),
     ("surushtirishga_rozi",   "🔍 *27/32* — Oxirgi ish joyingizdan surishtirishimizga rozimisiz?\n_(Ha / Yo'q)_"),
     ("oldingi_maosh",         "💵 *28/32* — Oxirgi ish joyingizda qancha oylik olgan edingiz?"),
     ("kutilayotgan_maosh",    "💰 *29/32* — Bizdan qancha oylik kutasiz?"),
@@ -308,7 +308,11 @@ async def anketa_callback(update, context):
             logger.error(f"Admin ga xato: {e}")
         user_anketa.pop(user_id, None)
         await query.edit_message_text(
-            "✅ *Anketangiz yuborildi!*\n\n🕐 Ko'rib chiqish: 1-3 ish kuni\n📱 @Ottimo_hr bog'lanadi\n\nRahmat! 🙏",
+            "🙏 *Anketani to'ldirganingiz uchun katta rahmat!*\n\n"
+            "✅ Ma'lumotlaringiz muvaffaqiyatli saqlandi!\n\n"
+            "🕐 Ko'rib chiqish muddati: 1-3 ish kuni\n"
+            "📱 @Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
+            "Omad tilaymiz! 🌟",
             parse_mode='Markdown')
         await context.bot.send_message(
             chat_id=user_id,
