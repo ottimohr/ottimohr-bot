@@ -325,11 +325,11 @@ async def anketa_callback(update, context):
                 "🙏 *Anketani to'ldirganingiz uchun katta rahmat!*\n\n"
                 "✅ Ma'lumotlaringiz muvaffaqiyatli saqlandi!\n\n"
                 "🕐 Ko'rib chiqish muddati: 1-3 ish kuni\n"
-                "📱 @Ottimo\_hr tez orada siz bilan bog'lanadi\n\n"
-                "Omad tilaymiz\! 🌟\n\n"
-                "📲 Murojaat uchun: [Ottimo HR](https://t.me/ottimo_uz)"
+                "📱 @Ottimo_hr tez orada siz bilan bog'lanadi\n\n"
+                "Omad tilaymiz! 🌟\n\n"
+                "📲 Murojaat uchun: https://t.me/ottimo_uz"
             ),
-            parse_mode='MarkdownV2',
+            parse_mode='Markdown',
             disable_web_page_preview=True,
             reply_markup=MAIN_MENU
         )
@@ -436,4 +436,4 @@ def main():
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
-    main()А
+    main()
