@@ -161,7 +161,7 @@ STATIC_RESPONSES = {
 MAIN_MENU = ReplyKeyboardMarkup([
     ["👷 Ishchi qabul qilish", "❓ Savol va Javob", "⏰ Ish vaqti"],
     ["📊 Ish ma'lumotlari", "🤝 Xodimlar muammolari", "⚖️ Mehnat qonunlari"],
-    ["📍 Filiallar", "📞 Qo'llab-quvvatlash", "➕ Qo'shimcha savol"],
+    ["📍 Filiallar", "📞 Qo'llab-quvvatlash", "🌐 Til tanlash"],
     ["👨‍💼 Admin", "🆘 Yordam", "🗑️ Suhbatni tozalash"]
 ], resize_keyboard=True)
 
@@ -415,36 +415,52 @@ def ask_gemini(user_id, user_text):
             for h in clean_history[-5:]
         ])
 
+    # Til aniqlash
+    lang = "uz"
+    for h in history:
+        if h.get("user") == "__lang_ru__":
+            lang = "ru"; break
+        elif h.get("user") == "__lang_en__":
+            lang = "en"; break
+
+    if lang == "ru":
+        lang_instruction = "Отвечай только на русском языке."
+    elif lang == "en":
+        lang_instruction = "Reply only in English."
+    else:
+        lang_instruction = "Faqat o'zbek tilida javob ber."
+
+    ottimo_info = (
+        "Ottimo Cafe haqida to'liq ma'lumot:\n"
+        "- Zamonaviy kafe, Toshkentda 3 ta filiali bor\n"
+        "- Filiallar: 1) Nukus kinoteatri yonida, Shifer ko'chasi 71; "
+        "2) Parus ostida, Katartal ko'chasi 60A/1; "
+        "3) Talant International School ro'parasida, Buyuk Ipak Yo'li 31\n"
+        "- Bo'sh ish o'rinlari: Barista, Kassir, Konditer-sotuvchi\n"
+        "- Ish vaqti: kunduzi 07:30-16:30, kechki payt 16:00-24:00\n"
+        "- Yosh talabi: 20-35 yosh\n"
+        "- Rus tilini bilish shart\n"
+        "- Chekmaydigan va spirtli ichimlik iste'mol qilmaydigan bo'lishi shart\n"
+        "- Probatsiya muddati: 1 oy\n"
+        "- Maosh har 10 kunda to'lanadi\n"
+        "- Har smenada bepul ovqat beriladi\n"
+        "- Bog'lanish: +998 99 060 33 53, @Ottimo_hr"
+    )
+
     if ottimo_mode:
         system = (
+            f"{lang_instruction}\n"
             "Sen Ottimo Cafe uchun maxsus HR yordamchisisisan.\n"
             "MUHIM QOIDA: Faqat Ottimo Cafe haqidagi savollarga javob ber.\n"
-            "Agar savol Ottimo Cafe bilan bog'liq bo'lmasa, quyidagicha javob ber:\n"
-            "'Kechirasiz, men faqat Ottimo Cafe haqidagi savollarga javob bera olaman. "
-            "Ottimo Cafe haqida savol bering!'\n\n"
-            "Ottimo Cafe haqida to'liq ma'lumot:\n"
-            "- Zamonaviy kafe, Toshkentda 3 ta filiali bor\n"
-            "- Filiallar: 1) Nukus kinoteatri yonida, Shifer ko'chasi 71; "
-            "2) Parus ostida, Katartal ko'chasi 60A/1; "
-            "3) Talant International School ro'parasida, Buyuk Ipak Yo'li 31\n"
-            "- Bo'sh ish o'rinlari: Barista, Kassir, Konditer-sotuvchi\n"
-            "- Ish vaqti: kunduzi 07:30-16:30, kechki payt 16:00-24:00\n"
-            "- Yosh talabi: 20-35 yosh\n"
-            "- Rus tilini bilish shart\n"
-            "- Chekmaydigan va spirtli ichimlik iste'mol qilmaydigan bo'lishi shart\n"
-            "- Probatsiya muddati: 1 oy\n"
-            "- Maosh har 10 kunda to'lanadi\n"
-            "- Har smenada bepul ovqat beriladi\n"
-            "- Bog'lanish: +998 99 060 33 53, @Ottimo_hr\n\n"
-            "Faqat o'zbek tilida, do'stona va ijodiy tarzda javob ber."
+            "Agar savol Ottimo Cafe bilan bog'liq bo'lmasa: "
+            "Kechirasiz, men faqat Ottimo Cafe haqidagi savollarga javob bera olaman, de.\n\n"
+            + ottimo_info + "\n\nDo'stona va ijodiy tarzda javob ber."
         )
     else:
         system = (
-            "Sen Ottimo Cafe uchun HR agentisan. Faqat o'zbek tilida javob ber.\n"
-            "Ottimo Cafe — Toshkentdagi zamonaviy kafe. "
-            "Filiallar: Shifer 71, Katartal 60A/1, Buyuk Ipak Yo'li 31. "
-            "Bog'lanish: +998 99 060 33 53, @Ottimo_hr. "
-            "Har doim do'stona va aniq javob ber."
+            f"{lang_instruction}\n"
+            "Sen Ottimo Cafe uchun HR agentisan.\n"
+            + ottimo_info + "\nHar doim do'stona va aniq javob ber."
         )
 
     full_prompt = system + history_text + f"\n\nFoydalanuvchi: {user_text}\nAgent:"
@@ -501,9 +517,41 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Qo'llab-quvvatlash xizmati:\n\nTelefon: +998 99 060 33 53\nTelegram: @Ottimo_hr",
             reply_markup=MAIN_MENU); return
-    if user_text == "➕ Qo'shimcha savol":
+    if user_text == "🌐 Til tanlash":
+        lang_keyboard = ReplyKeyboardMarkup([
+            ["🇺🇿 O'zbek tili"],
+            ["🇷🇺 Русский язык"],
+            ["🇬🇧 English"],
+            ["🔙 Bosh menyu"]
+        ], resize_keyboard=True)
         await update.message.reply_text(
-            "Savolingizni yozing, javob beramiz!", reply_markup=MAIN_MENU); return
+            "Tilni tanlang / Выберите язык / Choose language:",
+            reply_markup=lang_keyboard)
+        return
+
+    if user_text == "🇺🇿 O'zbek tili":
+        user_sessions[user_id] = [{"user": "__lang_uz__", "agent": "__lang_uz__"}]
+        await update.message.reply_text(
+            "O'zbek tili tanlandi! Endi savollaringizni o'zbek tilida berishingiz mumkin.",
+            reply_markup=MAIN_MENU)
+        return
+
+    if user_text == "🇷🇺 Русский язык":
+        user_sessions[user_id] = [{"user": "__lang_ru__", "agent": "__lang_ru__"}]
+        await update.message.reply_text(
+            "Выбран русский язык! Теперь вы можете задавать вопросы на русском языке.",
+            reply_markup=MAIN_MENU)
+        return
+
+    if user_text == "🇬🇧 English":
+        user_sessions[user_id] = [{"user": "__lang_en__", "agent": "__lang_en__"}]
+        await update.message.reply_text(
+            "English selected! Now you can ask questions in English.",
+            reply_markup=MAIN_MENU)
+        return
+
+    if user_text == "➕ Qo'shimcha savol":
+        await update.message.reply_text("Savolingizni yozing!", reply_markup=MAIN_MENU); return
     if user_text == "👷 Ishchi qabul qilish":
         await start_anketa(update, context); return
     if user_text == "❓ Savol va Javob":
